@@ -1,0 +1,100 @@
+services:
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "${APP_PORT:-80}:80"
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./app/public:/var/www/html/public:ro
+      - screenshots:/var/www/html/storage/app/screenshots:ro
+    depends_on:
+      - app
+
+  app:
+    build:
+      context: .
+      dockerfile: ./docker/php/Dockerfile
+    env_file:
+      - ./app/.env
+    volumes:
+      - ./app:/var/www/html
+      - screenshots:/var/www/html/storage/app/screenshots
+    depends_on:
+      - postgres
+      - redis
+
+  worker:
+    build:
+      context: .
+      dockerfile: ./docker/php/Dockerfile
+    env_file:
+      - ./app/.env
+    command: php artisan queue:work redis --sleep=3 --tries=3 --max-time=3600
+    volumes:
+      - ./app:/var/www/html
+      - screenshots:/var/www/html/storage/app/screenshots
+    depends_on:
+      - app
+      - redis
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: ./docker/php/Dockerfile
+    env_file:
+      - ./app/.env
+    command: php artisan schedule:work
+    volumes:
+      - ./app:/var/www/html
+      - screenshots:/var/www/html/storage/app/screenshots
+    depends_on:
+      - app
+
+  result-listener:
+    build:
+      context: .
+      dockerfile: ./docker/php/Dockerfile
+    env_file:
+      - ./app/.env
+    command: php artisan screenshot:listen
+    volumes:
+      - ./app:/var/www/html
+      - screenshots:/var/www/html/storage/app/screenshots
+    depends_on:
+      - app
+      - redis
+
+  screenshot-worker:
+    build:
+      context: .
+      dockerfile: ./docker/node/Dockerfile
+    env_file:
+      - ./app/.env
+    volumes:
+      - ./app/screenshot-worker:/app
+      - screenshots:/app/storage/app/screenshots
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:alpine
+    volumes:
+      - redis_data:/data
+
+  postgres:
+    image: postgres:16-alpine
+    env_file:
+      - ./app/.env
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-captura}
+      POSTGRES_USER: ${DB_USERNAME:-captura}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secret}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
+  redis_data:
+  screenshots:

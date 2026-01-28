@@ -1,0 +1,19 @@
+services:
+  nginx:
+    ports:
+      - "${APP_PORT:-80}:80"
+
+  app:
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+
+  worker:
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+
+  scheduler:
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
