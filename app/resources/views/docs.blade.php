@@ -882,6 +882,15 @@
                 setField('locale', regionBundles[value].locale);
                 setField('timezone', regionBundles[value].timezone);
             }
+            if (value === 'iphone') {
+                setField('device_scale_factor', 3);
+                setField('mobile', true);
+                setField('touch', true);
+            } else if (value && value !== 'custom') {
+                setField('device_scale_factor', 1);
+                setField('mobile', false);
+                setField('touch', false);
+            }
         });
     }
     if (proxyPoolToggle && proxyStrategySelect) {

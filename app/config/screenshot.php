@@ -46,6 +46,9 @@ return [
             ],
             'locale' => 'en-US',
             'timezone' => 'America/Los_Angeles',
+            'device_scale_factor' => 3,
+            'mobile' => true,
+            'touch' => true,
         ],
         'firefox-win' => [
             'user_agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0',

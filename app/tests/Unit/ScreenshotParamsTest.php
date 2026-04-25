@@ -171,6 +171,9 @@ class ScreenshotParamsTest extends TestCase
                 ],
                 'locale' => 'en-GB',
                 'timezone' => 'Europe/London',
+                'device_scale_factor' => 2,
+                'mobile' => true,
+                'touch' => true,
             ],
         ]);
         Config::set('screenshot.limits', ['timeout' => 30]);
@@ -187,6 +190,9 @@ class ScreenshotParamsTest extends TestCase
         ], $params->headers);
         $this->assertSame('en-GB', $params->locale);
         $this->assertSame('Europe/London', $params->timezone);
+        $this->assertSame(2.0, $params->deviceScaleFactor);
+        $this->assertTrue($params->mobile);
+        $this->assertTrue($params->touch);
     }
 
     public function test_ua_preset_rotate_uses_available_presets(): void

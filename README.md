@@ -117,6 +117,7 @@ These are valid for `GET /api/screenshot` and `POST /api/screenshot` unless note
 ## Identity presets
 
 Use `ua_preset` to set a realistic UA + headers + locale + timezone bundle. You can also pass `locale`/`timezone` explicitly to override.
+The `iphone` preset also enables mobile viewport, touch input, and a HiDPI scale unless you override those fields.
 
 - `chrome-mac`, `chrome-win`, `safari-mac`, `iphone`, `firefox-win`
 - Region bundles: `region-us`, `region-uk`, `region-eu`, `region-au`, `region-jp`

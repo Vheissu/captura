@@ -52,6 +52,7 @@ final readonly class ScreenshotParams
         $defaults = config('screenshot.defaults');
         $limits = config('screenshot.limits');
         $presets = config('screenshot.user_agent_presets', []);
+        $appliedPreset = null;
 
         $format = strtolower((string) ($validated['format'] ?? $defaults['format']));
         if ($format === 'jpeg') {
@@ -90,6 +91,7 @@ final readonly class ScreenshotParams
 
             if ($presetKey && isset($presets[$presetKey])) {
                 $preset = $presets[$presetKey];
+                $appliedPreset = $preset;
                 if (! empty($preset['user_agent'])) {
                     $userAgent = $preset['user_agent'];
                 }
@@ -128,9 +130,9 @@ final readonly class ScreenshotParams
             quality: (int) ($validated['quality'] ?? $defaults['quality']),
             width: (int) ($validated['width'] ?? $defaults['width']),
             height: (int) ($validated['height'] ?? $defaults['height']),
-            deviceScaleFactor: (float) ($validated['device_scale_factor'] ?? 1),
-            mobile: (bool) ($validated['mobile'] ?? false),
-            touch: (bool) ($validated['touch'] ?? false),
+            deviceScaleFactor: (float) ($validated['device_scale_factor'] ?? ($appliedPreset['device_scale_factor'] ?? 1)),
+            mobile: (bool) ($validated['mobile'] ?? ($appliedPreset['mobile'] ?? false)),
+            touch: (bool) ($validated['touch'] ?? ($appliedPreset['touch'] ?? false)),
             landscape: (bool) ($validated['landscape'] ?? false),
             fullPage: (bool) ($validated['full_page'] ?? $defaults['full_page']),
             selector: $validated['selector'] ?? null,
