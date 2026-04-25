@@ -309,6 +309,24 @@
                     <input id="height" name="height" type="number" min="100" value="800">
                 </div>
             </div>
+            <div class="inline">
+                <div>
+                    <label for="device_scale_factor">Device scale</label>
+                    <input id="device_scale_factor" name="device_scale_factor" type="number" min="0.1" max="4" step="0.1" value="1">
+                </div>
+                <div>
+                    <label for="pdf_format">PDF paper</label>
+                    <select id="pdf_format" name="pdf_format">
+                        <option value="a4">A4</option>
+                        <option value="letter">Letter</option>
+                        <option value="legal">Legal</option>
+                        <option value="tabloid">Tabloid</option>
+                        <option value="ledger">Ledger</option>
+                        <option value="a3">A3</option>
+                        <option value="a5">A5</option>
+                    </select>
+                </div>
+            </div>
             <div class="toggle">
                 <input id="full_page" name="full_page" type="checkbox" value="1">
                 <label for="full_page">Full page capture</label>
@@ -346,6 +364,10 @@
                             <label for="selector">Element selector</label>
                             <input id="selector" name="selector" type="text" placeholder=".hero, #main">
                         </div>
+                        <div>
+                            <label for="wait_for_selector">Wait for selector</label>
+                            <input id="wait_for_selector" name="wait_for_selector" type="text" placeholder=".loaded, #app-ready">
+                        </div>
                     </div>
                     <div class="toggle-row">
                         <div class="toggle">
@@ -359,6 +381,30 @@
                         <div class="toggle">
                             <input id="dark_mode" name="dark_mode" type="checkbox" value="1">
                             <label for="dark_mode">Prefer dark mode</label>
+                        </div>
+                        <div class="toggle">
+                            <input id="mobile" name="mobile" type="checkbox" value="1">
+                            <label for="mobile">Mobile viewport</label>
+                        </div>
+                        <div class="toggle">
+                            <input id="touch" name="touch" type="checkbox" value="1">
+                            <label for="touch">Touch input</label>
+                        </div>
+                        <div class="toggle">
+                            <input id="landscape" name="landscape" type="checkbox" value="1">
+                            <label for="landscape">Landscape</label>
+                        </div>
+                        <div class="toggle">
+                            <input id="transparent" name="transparent" type="checkbox" value="1">
+                            <label for="transparent">Transparent background</label>
+                        </div>
+                        <div class="toggle">
+                            <input id="disable_js" name="disable_js" type="checkbox" value="1">
+                            <label for="disable_js">Disable JavaScript</label>
+                        </div>
+                        <div class="toggle">
+                            <input id="prefer_css_page_size" name="prefer_css_page_size" type="checkbox" value="1">
+                            <label for="prefer_css_page_size">Use CSS page size</label>
                         </div>
                         <div class="toggle">
                             <input id="stealth" name="stealth" type="checkbox" value="1">
@@ -375,9 +421,15 @@
                     </div>
                     <div class="inline">
                         <div>
+                            <label for="pdf_scale">PDF scale</label>
+                            <input id="pdf_scale" name="pdf_scale" type="number" min="0.1" max="2" step="0.1" value="1">
+                        </div>
+                        <div>
                             <label for="hide_selectors">Hide selectors</label>
                             <input id="hide_selectors" name="hide_selectors" type="text" placeholder=".ads,.cookie">
                         </div>
+                    </div>
+                    <div class="inline">
                         <div>
                             <label for="ua_preset">Identity preset</label>
                             <select id="ua_preset" name="ua_preset">
@@ -484,17 +536,27 @@
         <tr><td>quality</td><td>int</td><td>80</td><td>JPG/WebP quality 1-100</td></tr>
         <tr><td>width</td><td>int</td><td>1280</td><td>Viewport width</td></tr>
         <tr><td>height</td><td>int</td><td>800</td><td>Viewport height</td></tr>
+        <tr><td>device_scale_factor</td><td>float</td><td>1</td><td>Device pixel ratio / HiDPI scale, 0.1-4</td></tr>
+        <tr><td>mobile</td><td>bool</td><td>false</td><td>Emulate mobile viewport behavior</td></tr>
+        <tr><td>touch</td><td>bool</td><td>false</td><td>Enable touch-capable viewport emulation</td></tr>
+        <tr><td>landscape</td><td>bool</td><td>false</td><td>Emulate landscape orientation; also prints PDFs landscape</td></tr>
         <tr><td>full_page</td><td>bool</td><td>false</td><td>Capture full page</td></tr>
         <tr><td>selector</td><td>string</td><td>null</td><td>Capture a specific element</td></tr>
+        <tr><td>wait_for_selector</td><td>string</td><td>null</td><td>Wait for a selector before capture</td></tr>
         <tr><td>delay</td><td>int</td><td>0</td><td>Delay before capture (ms)</td></tr>
         <tr><td>wait_until</td><td>string</td><td>load</td><td>load, domcontentloaded, networkidle</td></tr>
         <tr><td>timeout</td><td>int</td><td>30</td><td>Timeout in seconds</td></tr>
         <tr><td>block_ads</td><td>bool</td><td>false</td><td>Block ads</td></tr>
         <tr><td>block_cookies</td><td>bool</td><td>false</td><td>Hide cookie banners</td></tr>
         <tr><td>dark_mode</td><td>bool</td><td>false</td><td>Prefer dark theme</td></tr>
+        <tr><td>transparent</td><td>bool</td><td>false</td><td>Preserve transparency instead of forcing a white background</td></tr>
+        <tr><td>disable_js</td><td>bool</td><td>false</td><td>Disable JavaScript before navigation</td></tr>
         <tr><td>css</td><td>string</td><td>null</td><td>Custom CSS to inject</td></tr>
         <tr><td>js</td><td>string</td><td>null</td><td>Custom JS to execute</td></tr>
         <tr><td>hide_selectors</td><td>string</td><td>null</td><td>Comma-separated selectors to hide</td></tr>
+        <tr><td>pdf_format</td><td>string</td><td>a4</td><td>PDF paper format: letter, legal, tabloid, ledger, a0-a6</td></tr>
+        <tr><td>pdf_scale</td><td>float</td><td>1</td><td>PDF render scale, 0.1-2</td></tr>
+        <tr><td>prefer_css_page_size</td><td>bool</td><td>false</td><td>Let CSS @page size override PDF paper format</td></tr>
         <tr><td>ua_preset</td><td>string</td><td>null</td><td>chrome-mac, chrome-win, safari-mac, iphone, firefox-win, region-us, region-uk, region-eu, region-au, region-jp, rotate</td></tr>
         <tr><td>user_agent</td><td>string</td><td>null</td><td>Custom UA string</td></tr>
         <tr><td>headers</td><td>string</td><td>null</td><td>JSON object of headers</td></tr>
@@ -565,6 +627,8 @@
                 format: 'pdf',
                 response: 'image',
                 full_page: true,
+                pdf_format: 'a4',
+                pdf_scale: 1,
                 wait_until: 'networkidle',
                 delay: 0,
                 width: 1280,
@@ -576,6 +640,9 @@
                 full_page: true,
                 width: 390,
                 height: 844,
+                device_scale_factor: 3,
+                mobile: true,
+                touch: true,
                 wait_until: 'networkidle',
                 ua_preset: 'iphone',
             },
@@ -584,6 +651,7 @@
                 response: 'image',
                 full_page: false,
                 selector: '.hero',
+                wait_for_selector: '.hero',
                 wait_until: 'load',
             },
             adfreeDark: {
@@ -601,6 +669,7 @@
                 full_page: false,
                 width: 1200,
                 height: 630,
+                device_scale_factor: 1,
                 wait_until: 'load',
             },
             archive: {
@@ -619,10 +688,20 @@
 
         setField('quality', 80);
         setField('timeout', 30);
+        setField('device_scale_factor', 1);
+        setField('pdf_format', 'a4');
+        setField('pdf_scale', 1);
         setField('selector', '');
+        setField('wait_for_selector', '');
         setField('block_ads', false);
         setField('block_cookies', false);
         setField('dark_mode', false);
+        setField('mobile', false);
+        setField('touch', false);
+        setField('landscape', false);
+        setField('transparent', false);
+        setField('disable_js', false);
+        setField('prefer_css_page_size', false);
         setField('stealth', false);
         setField('proxy_pool', false);
         setField('hide_selectors', '');
@@ -642,14 +721,26 @@
         setField('full_page', !!preset.full_page);
         setField('width', preset.width || 1280);
         setField('height', preset.height || 800);
+        setField('device_scale_factor', preset.device_scale_factor || 1);
+        setField('pdf_format', preset.pdf_format || 'a4');
+        setField('pdf_scale', preset.pdf_scale || 1);
         setField('wait_until', preset.wait_until || 'load');
         setField('delay', preset.delay ?? 0);
         if (typeof preset.selector !== 'undefined') {
             setField('selector', preset.selector);
         }
+        if (typeof preset.wait_for_selector !== 'undefined') {
+            setField('wait_for_selector', preset.wait_for_selector);
+        }
         setField('block_ads', !!preset.block_ads);
         setField('block_cookies', !!preset.block_cookies);
         setField('dark_mode', !!preset.dark_mode);
+        setField('mobile', !!preset.mobile);
+        setField('touch', !!preset.touch);
+        setField('landscape', !!preset.landscape);
+        setField('transparent', !!preset.transparent);
+        setField('disable_js', !!preset.disable_js);
+        setField('prefer_css_page_size', !!preset.prefer_css_page_size);
         if (preset.ua_preset) {
             setField('ua_preset', preset.ua_preset);
         }

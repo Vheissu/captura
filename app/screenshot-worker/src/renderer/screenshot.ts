@@ -1,4 +1,4 @@
-import type { Page } from 'puppeteer';
+import type { Page, PaperFormat } from 'puppeteer';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { config } from '../config';
@@ -27,7 +27,10 @@ export async function renderScreenshot(
   await page.setViewport({
     width: params.width,
     height: params.height,
-    deviceScaleFactor: 1,
+    deviceScaleFactor: params.device_scale_factor || 1,
+    isMobile: Boolean(params.mobile),
+    hasTouch: Boolean(params.touch),
+    isLandscape: Boolean(params.landscape),
   });
 
   const locale = params.locale || config.defaults.locale;
@@ -88,10 +91,24 @@ export async function renderScreenshot(
     await enableAdBlocking(page);
   }
 
+  if (params.disable_js) {
+    await page.setJavaScriptEnabled(false);
+  }
+
   await page.goto(params.url, {
     waitUntil: waitUntilMap[params.wait_until as keyof typeof waitUntilMap],
     timeout: params.timeout * 1000,
   });
+
+  if (params.wait_for_selector) {
+    try {
+      await page.waitForSelector(params.wait_for_selector, {
+        timeout: params.timeout * 1000,
+      });
+    } catch {
+      throw new Error(`Wait selector not found before timeout: ${params.wait_for_selector}`);
+    }
+  }
 
   if (params.block_cookies) {
     await hideCookieBanners(page);
@@ -127,8 +144,13 @@ export async function renderScreenshot(
   if (params.format === 'pdf') {
     await page.pdf({
       path: fullPath,
-      format: 'A4',
+      format: (params.pdf_format || 'a4') as PaperFormat,
+      landscape: Boolean(params.landscape),
+      omitBackground: Boolean(params.transparent),
+      preferCSSPageSize: Boolean(params.prefer_css_page_size),
       printBackground: true,
+      scale: params.pdf_scale || 1,
+      timeout: params.timeout * 1000,
     });
   } else {
     const screenshotOptions: {
@@ -136,9 +158,11 @@ export async function renderScreenshot(
       fullPage?: boolean;
       type?: 'png' | 'jpeg' | 'webp';
       quality?: number;
+      omitBackground?: boolean;
     } = {
       path: fullPath,
       fullPage: params.full_page && !element,
+      omitBackground: Boolean(params.transparent),
     };
 
     screenshotOptions.type = params.format === 'jpg' ? 'jpeg' : params.format;

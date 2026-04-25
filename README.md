@@ -12,6 +12,7 @@ Captura is a free, open-source, self-hosted screenshot API inspired by screensho
 - Sync, async, and bulk screenshot capture
 - PNG, JPG, WebP, and PDF output
 - Full-page, viewport, or element capture
+- HiDPI, mobile, touch, landscape, and transparent-background rendering
 - Custom CSS/JS injection, cookie banner hiding, ad blocking
 - Built-in caching and webhook notifications
 - Stealth mode, proxy support, and region-aware identity presets
@@ -61,6 +62,9 @@ curl -X POST http://localhost/api/screenshot/bulk \
 # Stealth + rotate identity + US region bundle
 curl "http://localhost/api/screenshot?url=https://example.com&stealth=1&ua_preset=rotate&locale=en-US&timezone=America/New_York"
 
+# Mobile HiDPI capture with touch emulation
+curl "http://localhost/api/screenshot?url=https://example.com&width=390&height=844&device_scale_factor=3&mobile=1&touch=1&ua_preset=iphone" --output mobile.png
+
 # Proxy pool round robin
 curl "http://localhost/api/screenshot?url=https://example.com&proxy_pool=1&proxy_strategy=round_robin"
 ```
@@ -76,17 +80,27 @@ These are valid for `GET /api/screenshot` and `POST /api/screenshot` unless note
 | `quality` | int | `80` | JPG/WebP quality 1-100 |
 | `width` | int | `1280` | Viewport width |
 | `height` | int | `800` | Viewport height |
+| `device_scale_factor` | float | `1` | Device pixel ratio / HiDPI scale, 0.1-4 |
+| `mobile` | bool | `false` | Emulate mobile viewport behavior |
+| `touch` | bool | `false` | Enable touch-capable viewport emulation |
+| `landscape` | bool | `false` | Emulate landscape orientation; also prints PDFs landscape |
 | `full_page` | bool | `false` | Capture full page |
 | `selector` | string | `null` | Capture a specific element |
+| `wait_for_selector` | string | `null` | Wait for a selector before capture |
 | `delay` | int | `0` | Delay before capture (ms) |
 | `wait_until` | string | `load` | `load`, `domcontentloaded`, `networkidle` |
 | `timeout` | int | `30` | Timeout in seconds |
 | `block_ads` | bool | `false` | Block ads |
 | `block_cookies` | bool | `false` | Hide cookie banners |
 | `dark_mode` | bool | `false` | Prefer dark theme |
+| `transparent` | bool | `false` | Preserve transparency instead of forcing a white background |
+| `disable_js` | bool | `false` | Disable JavaScript before navigation |
 | `css` | string | `null` | Custom CSS to inject |
 | `js` | string | `null` | Custom JS to execute |
 | `hide_selectors` | string | `null` | Comma-separated selectors to hide |
+| `pdf_format` | string | `a4` | PDF paper format: `letter`, `legal`, `tabloid`, `ledger`, `a0`-`a6` |
+| `pdf_scale` | float | `1` | PDF render scale, 0.1-2 |
+| `prefer_css_page_size` | bool | `false` | Let CSS `@page` size override PDF paper format |
 | `ua_preset` | string | `null` | See Identity presets below |
 | `user_agent` | string | `null` | Custom UA string |
 | `headers` | string | `null` | JSON object of headers |

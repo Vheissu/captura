@@ -247,4 +247,62 @@ class ScreenshotParamsTest extends TestCase
         $this->assertSame('en-US', $params->locale);
         $this->assertSame('America/New_York', $params->timezone);
     }
+
+    public function test_wait_for_selector_is_preserved(): void
+    {
+        Config::set('screenshot.defaults', [
+            'width' => 1280,
+            'height' => 800,
+            'format' => 'png',
+            'quality' => 80,
+            'full_page' => false,
+            'headers' => [],
+        ]);
+        Config::set('screenshot.limits', ['timeout' => 30]);
+
+        $params = ScreenshotParams::fromRequest([
+            'url' => 'https://example.com',
+            'wait_for_selector' => '#app-ready',
+        ]);
+
+        $this->assertSame('#app-ready', $params->waitForSelector);
+        $this->assertSame('#app-ready', $params->toArray()['wait_for_selector']);
+    }
+
+    public function test_rendering_controls_are_preserved(): void
+    {
+        Config::set('screenshot.defaults', [
+            'width' => 1280,
+            'height' => 800,
+            'format' => 'png',
+            'quality' => 80,
+            'full_page' => false,
+            'headers' => [],
+        ]);
+        Config::set('screenshot.limits', ['timeout' => 30]);
+
+        $params = ScreenshotParams::fromRequest([
+            'url' => 'https://example.com',
+            'device_scale_factor' => 3,
+            'mobile' => true,
+            'touch' => true,
+            'landscape' => true,
+            'transparent' => true,
+            'disable_js' => true,
+            'pdf_format' => 'letter',
+            'pdf_scale' => 0.75,
+            'prefer_css_page_size' => true,
+        ]);
+
+        $this->assertSame(3.0, $params->deviceScaleFactor);
+        $this->assertTrue($params->mobile);
+        $this->assertTrue($params->touch);
+        $this->assertTrue($params->landscape);
+        $this->assertTrue($params->transparent);
+        $this->assertTrue($params->disableJs);
+        $this->assertSame('letter', $params->pdfFormat);
+        $this->assertSame(0.75, $params->pdfScale);
+        $this->assertTrue($params->preferCssPageSize);
+        $this->assertTrue($params->toArray()['prefer_css_page_size']);
+    }
 }

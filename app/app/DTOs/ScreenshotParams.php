@@ -14,17 +14,27 @@ final readonly class ScreenshotParams
         public int $quality,
         public int $width,
         public int $height,
+        public float $deviceScaleFactor,
+        public bool $mobile,
+        public bool $touch,
+        public bool $landscape,
         public bool $fullPage,
         public ?string $selector,
+        public ?string $waitForSelector,
         public int $delay,
         public string $waitUntil,
         public int $timeout,
         public bool $blockAds,
         public bool $blockCookies,
         public bool $darkMode,
+        public bool $transparent,
+        public bool $disableJs,
         public ?string $css,
         public ?string $js,
         public array $hideSelectors,
+        public string $pdfFormat,
+        public float $pdfScale,
+        public bool $preferCssPageSize,
         public ?string $userAgent,
         public array $headers,
         public bool $stealth,
@@ -51,7 +61,7 @@ final readonly class ScreenshotParams
         $headers = self::parseHeaders($defaults['headers'] ?? null);
 
         $hideSelectors = [];
-        if (!empty($validated['hide_selectors'])) {
+        if (! empty($validated['hide_selectors'])) {
             $hideSelectors = array_filter(array_map('trim', explode(',', (string) $validated['hide_selectors'])));
         }
 
@@ -80,16 +90,16 @@ final readonly class ScreenshotParams
 
             if ($presetKey && isset($presets[$presetKey])) {
                 $preset = $presets[$presetKey];
-                if (!empty($preset['user_agent'])) {
+                if (! empty($preset['user_agent'])) {
                     $userAgent = $preset['user_agent'];
                 }
-                if (!empty($preset['headers']) && is_array($preset['headers'])) {
+                if (! empty($preset['headers']) && is_array($preset['headers'])) {
                     $headers = array_merge($headers, $preset['headers']);
                 }
-                if ($locale === null && !empty($preset['locale'])) {
+                if ($locale === null && ! empty($preset['locale'])) {
                     $locale = (string) $preset['locale'];
                 }
-                if ($timezone === null && !empty($preset['timezone'])) {
+                if ($timezone === null && ! empty($preset['timezone'])) {
                     $timezone = (string) $preset['timezone'];
                 }
             }
@@ -105,7 +115,7 @@ final readonly class ScreenshotParams
             $timezone = $defaults['timezone'] ?? null;
         }
 
-        if (!empty($validated['headers'])) {
+        if (! empty($validated['headers'])) {
             $customHeaders = self::parseHeaders($validated['headers']);
             if ($customHeaders) {
                 $headers = array_merge($headers, $customHeaders);
@@ -118,17 +128,27 @@ final readonly class ScreenshotParams
             quality: (int) ($validated['quality'] ?? $defaults['quality']),
             width: (int) ($validated['width'] ?? $defaults['width']),
             height: (int) ($validated['height'] ?? $defaults['height']),
+            deviceScaleFactor: (float) ($validated['device_scale_factor'] ?? 1),
+            mobile: (bool) ($validated['mobile'] ?? false),
+            touch: (bool) ($validated['touch'] ?? false),
+            landscape: (bool) ($validated['landscape'] ?? false),
             fullPage: (bool) ($validated['full_page'] ?? $defaults['full_page']),
             selector: $validated['selector'] ?? null,
+            waitForSelector: $validated['wait_for_selector'] ?? null,
             delay: (int) ($validated['delay'] ?? 0),
             waitUntil: (string) ($validated['wait_until'] ?? 'load'),
             timeout: (int) ($validated['timeout'] ?? $limits['timeout']),
             blockAds: (bool) ($validated['block_ads'] ?? false),
             blockCookies: (bool) ($validated['block_cookies'] ?? false),
             darkMode: (bool) ($validated['dark_mode'] ?? false),
+            transparent: (bool) ($validated['transparent'] ?? false),
+            disableJs: (bool) ($validated['disable_js'] ?? false),
             css: $validated['css'] ?? null,
             js: $validated['js'] ?? null,
             hideSelectors: $hideSelectors,
+            pdfFormat: (string) ($validated['pdf_format'] ?? 'a4'),
+            pdfScale: (float) ($validated['pdf_scale'] ?? 1),
+            preferCssPageSize: (bool) ($validated['prefer_css_page_size'] ?? false),
             userAgent: $userAgent,
             headers: $headers,
             stealth: (bool) ($validated['stealth'] ?? ($defaults['stealth'] ?? false)),
@@ -150,17 +170,27 @@ final readonly class ScreenshotParams
             'quality' => $this->quality,
             'width' => $this->width,
             'height' => $this->height,
+            'device_scale_factor' => $this->deviceScaleFactor,
+            'mobile' => $this->mobile,
+            'touch' => $this->touch,
+            'landscape' => $this->landscape,
             'full_page' => $this->fullPage,
             'selector' => $this->selector,
+            'wait_for_selector' => $this->waitForSelector,
             'delay' => $this->delay,
             'wait_until' => $this->waitUntil,
             'timeout' => $this->timeout,
             'block_ads' => $this->blockAds,
             'block_cookies' => $this->blockCookies,
             'dark_mode' => $this->darkMode,
+            'transparent' => $this->transparent,
+            'disable_js' => $this->disableJs,
             'css' => $this->css,
             'js' => $this->js,
             'hide_selectors' => $this->hideSelectors,
+            'pdf_format' => $this->pdfFormat,
+            'pdf_scale' => $this->pdfScale,
+            'prefer_css_page_size' => $this->preferCssPageSize,
             'user_agent' => $this->userAgent,
             'headers' => $this->headers,
             'stealth' => $this->stealth,
@@ -182,17 +212,27 @@ final readonly class ScreenshotParams
             quality: $this->quality,
             width: $this->width,
             height: $this->height,
+            deviceScaleFactor: $this->deviceScaleFactor,
+            mobile: $this->mobile,
+            touch: $this->touch,
+            landscape: $this->landscape,
             fullPage: $this->fullPage,
             selector: $this->selector,
+            waitForSelector: $this->waitForSelector,
             delay: $this->delay,
             waitUntil: $this->waitUntil,
             timeout: $this->timeout,
             blockAds: $this->blockAds,
             blockCookies: $this->blockCookies,
             darkMode: $this->darkMode,
+            transparent: $this->transparent,
+            disableJs: $this->disableJs,
             css: $this->css,
             js: $this->js,
             hideSelectors: $this->hideSelectors,
+            pdfFormat: $this->pdfFormat,
+            pdfScale: $this->pdfScale,
+            preferCssPageSize: $this->preferCssPageSize,
             userAgent: $this->userAgent,
             headers: $this->headers,
             stealth: $stealth ?? $this->stealth,
@@ -222,11 +262,12 @@ final readonly class ScreenshotParams
             return $value;
         }
 
-        if (!is_string($value) || trim($value) === '') {
+        if (! is_string($value) || trim($value) === '') {
             return [];
         }
 
         $decoded = json_decode($value, true);
+
         return is_array($decoded) ? $decoded : [];
     }
 }
