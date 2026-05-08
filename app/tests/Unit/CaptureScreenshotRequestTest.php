@@ -28,6 +28,7 @@ class CaptureScreenshotRequestTest extends TestCase
             'transparent' => '1',
             'disable_js' => '0',
             'prefer_css_page_size' => 'false',
+            'reduced_motion' => 'yes',
         ]);
 
         $method = new \ReflectionMethod(CaptureScreenshotRequest::class, 'prepareForValidation');
@@ -49,9 +50,10 @@ class CaptureScreenshotRequestTest extends TestCase
         $this->assertTrue($data['transparent']);
         $this->assertFalse($data['disable_js']);
         $this->assertFalse($data['prefer_css_page_size']);
+        $this->assertTrue($data['reduced_motion']);
     }
 
-    public function test_wait_for_selector_is_valid_input(): void
+    public function test_rendering_controls_are_valid_input(): void
     {
         Config::set('screenshot.limits', [
             'max_width' => 3840,
@@ -69,6 +71,12 @@ class CaptureScreenshotRequestTest extends TestCase
             'device_scale_factor' => 2,
             'pdf_format' => 'letter',
             'pdf_scale' => 0.75,
+            'clip_x' => 10,
+            'clip_y' => 20,
+            'clip_width' => 640,
+            'clip_height' => 360,
+            'media' => 'print',
+            'reduced_motion' => true,
         ], $request->rules());
 
         $this->assertFalse($validator->fails());
@@ -76,5 +84,33 @@ class CaptureScreenshotRequestTest extends TestCase
         $this->assertSame(2, $validator->validated()['device_scale_factor']);
         $this->assertSame('letter', $validator->validated()['pdf_format']);
         $this->assertSame(0.75, $validator->validated()['pdf_scale']);
+        $this->assertSame(10, $validator->validated()['clip_x']);
+        $this->assertSame(20, $validator->validated()['clip_y']);
+        $this->assertSame(640, $validator->validated()['clip_width']);
+        $this->assertSame(360, $validator->validated()['clip_height']);
+        $this->assertSame('print', $validator->validated()['media']);
+        $this->assertTrue($validator->validated()['reduced_motion']);
+    }
+
+    public function test_clip_coordinates_require_clip_dimensions(): void
+    {
+        Config::set('screenshot.limits', [
+            'max_width' => 3840,
+            'max_height' => 2160,
+            'timeout' => 30,
+            'max_delay' => 10000,
+            'max_css_length' => 50000,
+            'max_js_length' => 50000,
+        ]);
+
+        $request = new CaptureScreenshotRequest;
+        $validator = Validator::make([
+            'url' => 'https://example.com',
+            'clip_x' => 10,
+        ], $request->rules());
+
+        $this->assertTrue($validator->fails());
+        $this->assertArrayHasKey('clip_width', $validator->errors()->messages());
+        $this->assertArrayHasKey('clip_height', $validator->errors()->messages());
     }
 }

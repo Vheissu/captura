@@ -4,6 +4,10 @@ use Illuminate\Http\Request;
 
 define('LARAVEL_START', microtime(true));
 
+// Prevent PHP 8.5 vendor deprecations from corrupting JSON and image responses
+// before Laravel's exception handler is booted.
+error_reporting(error_reporting() & ~E_DEPRECATED & ~E_USER_DEPRECATED);
+
 // Determine if the application is in maintenance mode...
 if (file_exists($maintenance = __DIR__.'/../storage/framework/maintenance.php')) {
     require $maintenance;

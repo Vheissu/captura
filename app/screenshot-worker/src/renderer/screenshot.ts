@@ -1,4 +1,4 @@
-import type { Page, PaperFormat } from 'puppeteer';
+import type { MediaFeature, Page, PaperFormat, ScreenshotClip } from 'puppeteer';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { config } from '../config';
@@ -83,8 +83,19 @@ export async function renderScreenshot(
     }
   }
 
+  if (params.media) {
+    await page.emulateMediaType(params.media);
+  }
+
+  const mediaFeatures: MediaFeature[] = [];
   if (params.dark_mode) {
-    await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'dark' }]);
+    mediaFeatures.push({ name: 'prefers-color-scheme', value: 'dark' });
+  }
+  if (params.reduced_motion) {
+    mediaFeatures.push({ name: 'prefers-reduced-motion', value: 'reduce' });
+  }
+  if (mediaFeatures.length > 0) {
+    await page.emulateMediaFeatures(mediaFeatures);
   }
 
   if (params.block_ads) {
@@ -138,6 +149,8 @@ export async function renderScreenshot(
     }
   }
 
+  const clip = getScreenshotClip(params);
+
   const fullPath = path.join(config.storage.basePath, storagePath);
   await fs.mkdir(path.dirname(fullPath), { recursive: true });
 
@@ -159,11 +172,16 @@ export async function renderScreenshot(
       type?: 'png' | 'jpeg' | 'webp';
       quality?: number;
       omitBackground?: boolean;
+      clip?: ScreenshotClip;
     } = {
       path: fullPath,
-      fullPage: params.full_page && !element,
+      fullPage: params.full_page && !element && !clip,
       omitBackground: Boolean(params.transparent),
     };
+
+    if (clip && !element) {
+      screenshotOptions.clip = clip;
+    }
 
     screenshotOptions.type = params.format === 'jpg' ? 'jpeg' : params.format;
     if (params.format !== 'png') {
@@ -182,12 +200,29 @@ export async function renderScreenshot(
 
   return {
     fileSize: stats.size,
-    width: viewport?.width || params.width,
-    height: viewport?.height || params.height,
+    width: clip && !element ? Math.round(clip.width) : viewport?.width || params.width,
+    height: clip && !element ? Math.round(clip.height) : viewport?.height || params.height,
   };
 }
 
 async function hideElements(page: Page, selectors: string[]): Promise<void> {
   const css = selectors.map((s) => `${s} { display: none !important; }`).join('\n');
   await page.addStyleTag({ content: css });
+}
+
+function getScreenshotClip(params: ScreenshotParams): ScreenshotClip | undefined {
+  if (!hasNumber(params.clip_width) || !hasNumber(params.clip_height)) {
+    return undefined;
+  }
+
+  return {
+    x: hasNumber(params.clip_x) ? params.clip_x : 0,
+    y: hasNumber(params.clip_y) ? params.clip_y : 0,
+    width: params.clip_width,
+    height: params.clip_height,
+  };
+}
+
+function hasNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value);
 }

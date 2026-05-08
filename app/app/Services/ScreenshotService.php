@@ -15,7 +15,6 @@ class ScreenshotService
     public function __construct(
         private UrlValidator $urlValidator,
         private CacheService $cacheService,
-        private StorageService $storageService,
         private ProxyPool $proxyPool,
     ) {}
 
@@ -96,12 +95,12 @@ class ScreenshotService
         }
 
         $poolEnabled = (bool) config('screenshot.proxy.enabled', false);
-        if (!$poolEnabled && !$params->proxyPool) {
+        if (! $poolEnabled && ! $params->proxyPool) {
             return $params;
         }
 
         $proxy = $this->proxyPool->select($params->proxyStrategy);
-        if (!$proxy) {
+        if (! $proxy) {
             return $params;
         }
 

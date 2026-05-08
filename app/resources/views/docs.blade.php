@@ -9,15 +9,15 @@
 
         :root {
             color-scheme: light;
-            --ink: #0b1020;
-            --muted: #53627a;
-            --accent: #ff6b3d;
-            --accent-2: #3a7dff;
-            --paper: #f4f1eb;
-            --card: #ffffff;
-            --shadow: 0 30px 70px rgba(11, 16, 32, 0.15);
-            --radius: 18px;
-            --radius-lg: 28px;
+            --ink: #171717;
+            --muted: #62594d;
+            --accent: #ff6c37;
+            --accent-2: #255c99;
+            --paper: #f6f1e8;
+            --card: #fffaf1;
+            --rule: #d8cdb9;
+            --radius: 8px;
+            --radius-lg: 8px;
         }
 
         * { box-sizing: border-box; }
@@ -25,9 +25,7 @@
             margin: 0;
             font-family: 'IBM Plex Sans', sans-serif;
             color: var(--ink);
-            background: radial-gradient(1200px 800px at 20% 0%, #ffe9d8 0%, transparent 50%),
-                        radial-gradient(900px 700px at 100% 0%, #dbe7ff 0%, transparent 50%),
-                        var(--paper);
+            background: var(--paper);
             min-height: 100vh;
         }
         .grain {
@@ -36,12 +34,14 @@
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140' viewBox='0 0 140 140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.06'/%3E%3C/svg%3E");
             pointer-events: none;
             mix-blend-mode: multiply;
+            opacity: 0.35;
         }
 
         header {
             padding: 56px 8vw 32px;
             display: grid;
             gap: 16px;
+            border-bottom: 1px solid var(--rule);
         }
         .title {
             font-family: 'Fraunces', serif;
@@ -59,9 +59,9 @@
             align-items: center;
             gap: 8px;
             padding: 6px 12px;
-            background: #10162f;
+            background: var(--ink);
             color: #fff;
-            border-radius: 999px;
+            border-radius: 6px;
             font-size: 0.85rem;
             letter-spacing: 0.04em;
             width: fit-content;
@@ -78,7 +78,7 @@
             background: var(--card);
             border-radius: var(--radius-lg);
             padding: 22px;
-            box-shadow: var(--shadow);
+            border: 1px solid var(--rule);
         }
 
         .panel-title {
@@ -108,8 +108,9 @@
         input, select, textarea {
             width: 100%;
             padding: 10px 12px;
-            border-radius: 12px;
-            border: 1px solid #d9dbe7;
+            border-radius: 6px;
+            border: 1px solid var(--rule);
+            background: #fffdf8;
             font-family: 'IBM Plex Sans', sans-serif;
             font-size: 0.95rem;
         }
@@ -125,13 +126,13 @@
         }
         .toggle input { width: auto; }
         details.advanced {
-            border-top: 1px solid #e4e6ef;
+            border-top: 1px solid var(--rule);
             padding-top: 12px;
         }
         details.advanced summary {
             cursor: pointer;
             font-weight: 600;
-            color: #10162f;
+            color: var(--ink);
         }
         .advanced-grid {
             display: grid;
@@ -150,9 +151,9 @@
             margin-top: 6px;
         }
         .btn.preset {
-            background: #f4f5fb;
-            color: #10162f;
-            border: 1px solid #d9dbe7;
+            background: #fffdf8;
+            color: var(--ink);
+            border: 1px solid var(--rule);
         }
         textarea {
             min-height: 110px;
@@ -160,16 +161,17 @@
         }
 
         .btn {
-            border: none;
+            border: 1px solid var(--accent);
             padding: 12px 16px;
-            border-radius: 12px;
+            border-radius: 6px;
             font-weight: 600;
-            background: linear-gradient(135deg, var(--accent), #ff9a62);
+            background: var(--accent);
             color: #fff;
             cursor: pointer;
         }
         .btn.secondary {
-            background: #10162f;
+            background: var(--ink);
+            border-color: var(--ink);
         }
         .btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
@@ -178,13 +180,13 @@
             align-items: center;
             gap: 6px;
             padding: 4px 10px;
-            border-radius: 999px;
-            background: #e7f8ef;
-            color: #0f7b45;
+            border-radius: 6px;
+            background: #e7f2e3;
+            color: #1f6b38;
             font-size: 0.85rem;
             margin-top: 4px;
         }
-        .status-pill.error { background: #ffe9e9; color: #b3261e; }
+        .status-pill.error { background: #f9dfd9; color: #9e2b18; }
 
         .results {
             display: grid;
@@ -192,29 +194,29 @@
         }
         .preview {
             border-radius: var(--radius);
-            background: #0b1020;
+            background: var(--ink);
             color: #fff;
             padding: 16px;
             min-height: 180px;
         }
         .preview img {
             max-width: 100%;
-            border-radius: 14px;
+            border-radius: 6px;
             display: none;
         }
         .preview iframe {
             width: 100%;
             height: 420px;
             border: none;
-            border-radius: 14px;
+            border-radius: 6px;
             display: none;
             background: #fff;
         }
         pre {
-            background: #0b1020;
-            color: #d7e3ff;
+            background: var(--ink);
+            color: #f3eadc;
             padding: 16px;
-            border-radius: 14px;
+            border-radius: 6px;
             overflow-x: auto;
         }
 
@@ -225,24 +227,23 @@
             width: 100%;
             border-collapse: collapse;
             font-size: 0.95rem;
-            background: #fff;
+            background: var(--card);
             border-radius: var(--radius);
             overflow: hidden;
         }
         th, td {
             padding: 10px 12px;
-            border-bottom: 1px solid #edf0f6;
+            border-bottom: 1px solid var(--rule);
         }
-        th { text-align: left; background: #f7f8fc; }
+        th { text-align: left; background: #eee4d4; }
 
         .floating-code {
-            background: #10162f;
-            color: #bcd0ff;
+            background: var(--ink);
+            color: #f3eadc;
             padding: 10px 14px;
-            border-radius: 12px;
+            border-radius: 6px;
             font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
             font-size: 0.85rem;
-            box-shadow: var(--shadow);
             overflow-x: auto;
         }
 
@@ -337,6 +338,7 @@
                     <button class="btn preset" type="button" data-preset="fullPdf">Full-page PDF</button>
                     <button class="btn preset" type="button" data-preset="mobile">Mobile full page</button>
                     <button class="btn preset" type="button" data-preset="hero">Hero element</button>
+                    <button class="btn preset" type="button" data-preset="crop">Crop 800x450</button>
                     <button class="btn preset" type="button" data-preset="adfreeDark">Ad-free dark</button>
                     <button class="btn preset" type="button" data-preset="og">OG image 1200x630</button>
                     <button class="btn preset" type="button" data-preset="archive">Archive clean</button>
@@ -367,6 +369,33 @@
                         <div>
                             <label for="wait_for_selector">Wait for selector</label>
                             <input id="wait_for_selector" name="wait_for_selector" type="text" placeholder=".loaded, #app-ready">
+                        </div>
+                    </div>
+                    <div class="inline">
+                        <div>
+                            <label for="media">CSS media</label>
+                            <select id="media" name="media">
+                                <option value="">Default</option>
+                                <option value="screen">Screen</option>
+                                <option value="print">Print</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="clip_x">Clip origin</label>
+                            <div class="inline">
+                                <input id="clip_x" name="clip_x" type="number" min="0" step="1" placeholder="X">
+                                <input id="clip_y" name="clip_y" type="number" min="0" step="1" placeholder="Y">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="inline">
+                        <div>
+                            <label for="clip_width">Clip width</label>
+                            <input id="clip_width" name="clip_width" type="number" min="1" step="1" placeholder="1200">
+                        </div>
+                        <div>
+                            <label for="clip_height">Clip height</label>
+                            <input id="clip_height" name="clip_height" type="number" min="1" step="1" placeholder="630">
                         </div>
                     </div>
                     <div class="toggle-row">
@@ -401,6 +430,10 @@
                         <div class="toggle">
                             <input id="disable_js" name="disable_js" type="checkbox" value="1">
                             <label for="disable_js">Disable JavaScript</label>
+                        </div>
+                        <div class="toggle">
+                            <input id="reduced_motion" name="reduced_motion" type="checkbox" value="1">
+                            <label for="reduced_motion">Reduce motion</label>
                         </div>
                         <div class="toggle">
                             <input id="prefer_css_page_size" name="prefer_css_page_size" type="checkbox" value="1">
@@ -540,6 +573,10 @@
         <tr><td>mobile</td><td>bool</td><td>false</td><td>Emulate mobile viewport behavior</td></tr>
         <tr><td>touch</td><td>bool</td><td>false</td><td>Enable touch-capable viewport emulation</td></tr>
         <tr><td>landscape</td><td>bool</td><td>false</td><td>Emulate landscape orientation; also prints PDFs landscape</td></tr>
+        <tr><td>clip_x</td><td>float</td><td>0</td><td>Left edge of an image crop rectangle</td></tr>
+        <tr><td>clip_y</td><td>float</td><td>0</td><td>Top edge of an image crop rectangle</td></tr>
+        <tr><td>clip_width</td><td>float</td><td>null</td><td>Crop rectangle width for image formats</td></tr>
+        <tr><td>clip_height</td><td>float</td><td>null</td><td>Crop rectangle height for image formats</td></tr>
         <tr><td>full_page</td><td>bool</td><td>false</td><td>Capture full page</td></tr>
         <tr><td>selector</td><td>string</td><td>null</td><td>Capture a specific element</td></tr>
         <tr><td>wait_for_selector</td><td>string</td><td>null</td><td>Wait for a selector before capture</td></tr>
@@ -551,6 +588,8 @@
         <tr><td>dark_mode</td><td>bool</td><td>false</td><td>Prefer dark theme</td></tr>
         <tr><td>transparent</td><td>bool</td><td>false</td><td>Preserve transparency instead of forcing a white background</td></tr>
         <tr><td>disable_js</td><td>bool</td><td>false</td><td>Disable JavaScript before navigation</td></tr>
+        <tr><td>media</td><td>string</td><td>null</td><td>Emulate screen or print CSS media</td></tr>
+        <tr><td>reduced_motion</td><td>bool</td><td>false</td><td>Request reduced-motion CSS behavior for steadier captures</td></tr>
         <tr><td>css</td><td>string</td><td>null</td><td>Custom CSS to inject</td></tr>
         <tr><td>js</td><td>string</td><td>null</td><td>Custom JS to execute</td></tr>
         <tr><td>hide_selectors</td><td>string</td><td>null</td><td>Comma-separated selectors to hide</td></tr>
@@ -611,6 +650,18 @@
         setJson({});
     }
 
+    function syncProxyStrategy() {
+        if (proxyPoolToggle && proxyStrategySelect) {
+            proxyStrategySelect.disabled = !proxyPoolToggle.checked;
+        }
+    }
+
+    function resetForm() {
+        HTMLFormElement.prototype.reset.call(form);
+        syncProxyStrategy();
+        resetPreview();
+    }
+
     function setField(id, value) {
         const el = document.getElementById(id);
         if (!el) return;
@@ -654,6 +705,16 @@
                 wait_for_selector: '.hero',
                 wait_until: 'load',
             },
+            crop: {
+                format: 'png',
+                response: 'image',
+                full_page: false,
+                clip_x: 0,
+                clip_y: 0,
+                clip_width: 800,
+                clip_height: 450,
+                wait_until: 'load',
+            },
             adfreeDark: {
                 format: 'png',
                 response: 'image',
@@ -693,6 +754,11 @@
         setField('pdf_scale', 1);
         setField('selector', '');
         setField('wait_for_selector', '');
+        setField('media', '');
+        setField('clip_x', '');
+        setField('clip_y', '');
+        setField('clip_width', '');
+        setField('clip_height', '');
         setField('block_ads', false);
         setField('block_cookies', false);
         setField('dark_mode', false);
@@ -701,6 +767,7 @@
         setField('landscape', false);
         setField('transparent', false);
         setField('disable_js', false);
+        setField('reduced_motion', false);
         setField('prefer_css_page_size', false);
         setField('stealth', false);
         setField('proxy_pool', false);
@@ -732,6 +799,21 @@
         if (typeof preset.wait_for_selector !== 'undefined') {
             setField('wait_for_selector', preset.wait_for_selector);
         }
+        if (typeof preset.media !== 'undefined') {
+            setField('media', preset.media);
+        }
+        if (typeof preset.clip_x !== 'undefined') {
+            setField('clip_x', preset.clip_x);
+        }
+        if (typeof preset.clip_y !== 'undefined') {
+            setField('clip_y', preset.clip_y);
+        }
+        if (typeof preset.clip_width !== 'undefined') {
+            setField('clip_width', preset.clip_width);
+        }
+        if (typeof preset.clip_height !== 'undefined') {
+            setField('clip_height', preset.clip_height);
+        }
         setField('block_ads', !!preset.block_ads);
         setField('block_cookies', !!preset.block_cookies);
         setField('dark_mode', !!preset.dark_mode);
@@ -740,6 +822,7 @@
         setField('landscape', !!preset.landscape);
         setField('transparent', !!preset.transparent);
         setField('disable_js', !!preset.disable_js);
+        setField('reduced_motion', !!preset.reduced_motion);
         setField('prefer_css_page_size', !!preset.prefer_css_page_size);
         if (preset.ua_preset) {
             setField('ua_preset', preset.ua_preset);
@@ -840,7 +923,7 @@
         }
     });
 
-    resetBtn.addEventListener('click', resetPreview);
+    resetBtn.addEventListener('click', resetForm);
     presetButtons.forEach((btn) => {
         btn.addEventListener('click', () => applyPreset(btn.dataset.preset));
     });
@@ -894,9 +977,6 @@
         });
     }
     if (proxyPoolToggle && proxyStrategySelect) {
-        const syncProxyStrategy = () => {
-            proxyStrategySelect.disabled = !proxyPoolToggle.checked;
-        };
         proxyPoolToggle.addEventListener('change', syncProxyStrategy);
         syncProxyStrategy();
     }

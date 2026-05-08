@@ -18,6 +18,10 @@ final readonly class ScreenshotParams
         public bool $mobile,
         public bool $touch,
         public bool $landscape,
+        public ?float $clipX,
+        public ?float $clipY,
+        public ?float $clipWidth,
+        public ?float $clipHeight,
         public bool $fullPage,
         public ?string $selector,
         public ?string $waitForSelector,
@@ -29,6 +33,8 @@ final readonly class ScreenshotParams
         public bool $darkMode,
         public bool $transparent,
         public bool $disableJs,
+        public ?string $media,
+        public bool $reducedMotion,
         public ?string $css,
         public ?string $js,
         public array $hideSelectors,
@@ -124,6 +130,10 @@ final readonly class ScreenshotParams
             }
         }
 
+        $clipWidth = self::nullableFloat($validated, 'clip_width');
+        $clipHeight = self::nullableFloat($validated, 'clip_height');
+        $hasClip = $clipWidth !== null && $clipHeight !== null;
+
         return new self(
             url: (string) $validated['url'],
             format: $format,
@@ -134,6 +144,10 @@ final readonly class ScreenshotParams
             mobile: (bool) ($validated['mobile'] ?? ($appliedPreset['mobile'] ?? false)),
             touch: (bool) ($validated['touch'] ?? ($appliedPreset['touch'] ?? false)),
             landscape: (bool) ($validated['landscape'] ?? false),
+            clipX: $hasClip ? (self::nullableFloat($validated, 'clip_x') ?? 0.0) : null,
+            clipY: $hasClip ? (self::nullableFloat($validated, 'clip_y') ?? 0.0) : null,
+            clipWidth: $hasClip ? $clipWidth : null,
+            clipHeight: $hasClip ? $clipHeight : null,
             fullPage: (bool) ($validated['full_page'] ?? $defaults['full_page']),
             selector: $validated['selector'] ?? null,
             waitForSelector: $validated['wait_for_selector'] ?? null,
@@ -145,6 +159,8 @@ final readonly class ScreenshotParams
             darkMode: (bool) ($validated['dark_mode'] ?? false),
             transparent: (bool) ($validated['transparent'] ?? false),
             disableJs: (bool) ($validated['disable_js'] ?? false),
+            media: $validated['media'] ?? null,
+            reducedMotion: (bool) ($validated['reduced_motion'] ?? false),
             css: $validated['css'] ?? null,
             js: $validated['js'] ?? null,
             hideSelectors: $hideSelectors,
@@ -176,6 +192,10 @@ final readonly class ScreenshotParams
             'mobile' => $this->mobile,
             'touch' => $this->touch,
             'landscape' => $this->landscape,
+            'clip_x' => $this->clipX,
+            'clip_y' => $this->clipY,
+            'clip_width' => $this->clipWidth,
+            'clip_height' => $this->clipHeight,
             'full_page' => $this->fullPage,
             'selector' => $this->selector,
             'wait_for_selector' => $this->waitForSelector,
@@ -187,6 +207,8 @@ final readonly class ScreenshotParams
             'dark_mode' => $this->darkMode,
             'transparent' => $this->transparent,
             'disable_js' => $this->disableJs,
+            'media' => $this->media,
+            'reduced_motion' => $this->reducedMotion,
             'css' => $this->css,
             'js' => $this->js,
             'hide_selectors' => $this->hideSelectors,
@@ -218,6 +240,10 @@ final readonly class ScreenshotParams
             mobile: $this->mobile,
             touch: $this->touch,
             landscape: $this->landscape,
+            clipX: $this->clipX,
+            clipY: $this->clipY,
+            clipWidth: $this->clipWidth,
+            clipHeight: $this->clipHeight,
             fullPage: $this->fullPage,
             selector: $this->selector,
             waitForSelector: $this->waitForSelector,
@@ -229,6 +255,8 @@ final readonly class ScreenshotParams
             darkMode: $this->darkMode,
             transparent: $this->transparent,
             disableJs: $this->disableJs,
+            media: $this->media,
+            reducedMotion: $this->reducedMotion,
             css: $this->css,
             js: $this->js,
             hideSelectors: $this->hideSelectors,
@@ -271,5 +299,14 @@ final readonly class ScreenshotParams
         $decoded = json_decode($value, true);
 
         return is_array($decoded) ? $decoded : [];
+    }
+
+    private static function nullableFloat(array $values, string $key): ?float
+    {
+        if (! array_key_exists($key, $values) || $values[$key] === null || $values[$key] === '') {
+            return null;
+        }
+
+        return (float) $values[$key];
     }
 }

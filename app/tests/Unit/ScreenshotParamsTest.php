@@ -293,8 +293,14 @@ class ScreenshotParamsTest extends TestCase
             'mobile' => true,
             'touch' => true,
             'landscape' => true,
+            'clip_x' => 10,
+            'clip_y' => 20,
+            'clip_width' => 640,
+            'clip_height' => 360,
             'transparent' => true,
             'disable_js' => true,
+            'media' => 'print',
+            'reduced_motion' => true,
             'pdf_format' => 'letter',
             'pdf_scale' => 0.75,
             'prefer_css_page_size' => true,
@@ -304,11 +310,43 @@ class ScreenshotParamsTest extends TestCase
         $this->assertTrue($params->mobile);
         $this->assertTrue($params->touch);
         $this->assertTrue($params->landscape);
+        $this->assertSame(10.0, $params->clipX);
+        $this->assertSame(20.0, $params->clipY);
+        $this->assertSame(640.0, $params->clipWidth);
+        $this->assertSame(360.0, $params->clipHeight);
         $this->assertTrue($params->transparent);
         $this->assertTrue($params->disableJs);
+        $this->assertSame('print', $params->media);
+        $this->assertTrue($params->reducedMotion);
         $this->assertSame('letter', $params->pdfFormat);
         $this->assertSame(0.75, $params->pdfScale);
         $this->assertTrue($params->preferCssPageSize);
+        $this->assertSame(640.0, $params->toArray()['clip_width']);
+        $this->assertSame('print', $params->toArray()['media']);
         $this->assertTrue($params->toArray()['prefer_css_page_size']);
+    }
+
+    public function test_clip_coordinates_default_to_origin_when_dimensions_are_present(): void
+    {
+        Config::set('screenshot.defaults', [
+            'width' => 1280,
+            'height' => 800,
+            'format' => 'png',
+            'quality' => 80,
+            'full_page' => false,
+            'headers' => [],
+        ]);
+        Config::set('screenshot.limits', ['timeout' => 30]);
+
+        $params = ScreenshotParams::fromRequest([
+            'url' => 'https://example.com',
+            'clip_width' => 1200,
+            'clip_height' => 630,
+        ]);
+
+        $this->assertSame(0.0, $params->clipX);
+        $this->assertSame(0.0, $params->clipY);
+        $this->assertSame(1200.0, $params->clipWidth);
+        $this->assertSame(630.0, $params->clipHeight);
     }
 }

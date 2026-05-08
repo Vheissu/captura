@@ -14,6 +14,10 @@ export interface ScreenshotParams {
   mobile: boolean;
   touch: boolean;
   landscape: boolean;
+  clip_x?: number | null;
+  clip_y?: number | null;
+  clip_width?: number | null;
+  clip_height?: number | null;
   full_page: boolean;
   selector?: string;
   wait_for_selector?: string;
@@ -25,6 +29,8 @@ export interface ScreenshotParams {
   dark_mode: boolean;
   transparent: boolean;
   disable_js: boolean;
+  media?: 'screen' | 'print' | null;
+  reduced_motion: boolean;
   css?: string;
   js?: string;
   hide_selectors: string[];

@@ -23,6 +23,7 @@ abstract class ScreenshotRequest extends FormRequest
         'transparent',
         'disable_js',
         'prefer_css_page_size',
+        'reduced_motion',
     ];
 
     private const UA_PRESETS = [
@@ -80,6 +81,20 @@ abstract class ScreenshotRequest extends FormRequest
             $field('mobile') => ['sometimes', 'boolean'],
             $field('touch') => ['sometimes', 'boolean'],
             $field('landscape') => ['sometimes', 'boolean'],
+            $field('clip_x') => ['sometimes', 'numeric', 'min:0'],
+            $field('clip_y') => ['sometimes', 'numeric', 'min:0'],
+            $field('clip_width') => [
+                'required_with:'.$field('clip_x').','.$field('clip_y').','.$field('clip_height'),
+                'numeric',
+                'min:1',
+                'max:'.$limits['max_width'],
+            ],
+            $field('clip_height') => [
+                'required_with:'.$field('clip_x').','.$field('clip_y').','.$field('clip_width'),
+                'numeric',
+                'min:1',
+                'max:'.$limits['max_height'],
+            ],
             $field('full_page') => ['sometimes', 'boolean'],
             $field('selector') => ['sometimes', 'string', 'max:500'],
             $field('wait_for_selector') => ['sometimes', 'string', 'max:500'],
@@ -91,6 +106,8 @@ abstract class ScreenshotRequest extends FormRequest
             $field('dark_mode') => ['sometimes', 'boolean'],
             $field('transparent') => ['sometimes', 'boolean'],
             $field('disable_js') => ['sometimes', 'boolean'],
+            $field('media') => ['sometimes', Rule::in(['screen', 'print'])],
+            $field('reduced_motion') => ['sometimes', 'boolean'],
             $field('css') => ['sometimes', 'string', 'max:'.$limits['max_css_length']],
             $field('js') => ['sometimes', 'string', 'max:'.$limits['max_js_length']],
             $field('hide_selectors') => ['sometimes', 'string', 'max:1000'],

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Jobs;
 
 use App\Models\Screenshot;
+use App\Services\StorageService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -21,18 +22,22 @@ class ProcessScreenshot implements ShouldQueue
     use SerializesModels;
 
     public int $tries = 2;
+
     public int $timeout = 120;
 
     public function __construct(public Screenshot $screenshot) {}
 
-    public function handle(): void
+    public function handle(StorageService $storageService): void
     {
         $this->screenshot->markAsProcessing();
 
         $payload = [
             'id' => $this->screenshot->id,
             'params' => $this->screenshot->params,
-            'storage_path' => $this->generateStoragePath(),
+            'storage_path' => $storageService->generatePath(
+                $this->screenshot->id,
+                $this->screenshot->params['format'] ?? 'png',
+            ),
         ];
 
         Redis::rpush(config('screenshot.queue.name'), json_encode($payload));
@@ -41,18 +46,5 @@ class ProcessScreenshot implements ShouldQueue
     public function failed(Throwable $e): void
     {
         $this->screenshot->markAsFailed('DISPATCH_FAILED', $e->getMessage());
-    }
-
-    private function generateStoragePath(): string
-    {
-        $ext = $this->screenshot->params['format'] ?? 'png';
-
-        return sprintf(
-            '%s/%s/%s.%s',
-            now()->format('Y/m/d'),
-            substr($this->screenshot->id, 0, 2),
-            $this->screenshot->id,
-            $ext
-        );
     }
 }

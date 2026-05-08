@@ -11,8 +11,9 @@ Captura is a free, open-source, self-hosted screenshot API inspired by screensho
 
 - Sync, async, and bulk screenshot capture
 - PNG, JPG, WebP, and PDF output
-- Full-page, viewport, or element capture
+- Full-page, viewport, element, or crop-rectangle capture
 - HiDPI, mobile, touch, landscape, and transparent-background rendering
+- Screen/print CSS media and reduced-motion emulation for steadier captures
 - Custom CSS/JS injection, cookie banner hiding, ad blocking
 - Built-in caching and webhook notifications
 - Stealth mode, proxy support, and region-aware identity presets
@@ -65,6 +66,12 @@ curl "http://localhost/api/screenshot?url=https://example.com&stealth=1&ua_prese
 # Mobile HiDPI capture with touch emulation
 curl "http://localhost/api/screenshot?url=https://example.com&width=390&height=844&device_scale_factor=3&mobile=1&touch=1&ua_preset=iphone" --output mobile.png
 
+# Crop the top-left 1200x630 pixels for a share image
+curl "http://localhost/api/screenshot?url=https://example.com&clip_x=0&clip_y=0&clip_width=1200&clip_height=630" --output crop.png
+
+# Capture with print CSS and reduced motion
+curl "http://localhost/api/screenshot?url=https://example.com&media=print&reduced_motion=1" --output print-css.png
+
 # Proxy pool round robin
 curl "http://localhost/api/screenshot?url=https://example.com&proxy_pool=1&proxy_strategy=round_robin"
 ```
@@ -84,6 +91,10 @@ These are valid for `GET /api/screenshot` and `POST /api/screenshot` unless note
 | `mobile` | bool | `false` | Emulate mobile viewport behavior |
 | `touch` | bool | `false` | Enable touch-capable viewport emulation |
 | `landscape` | bool | `false` | Emulate landscape orientation; also prints PDFs landscape |
+| `clip_x` | float | `0` | Left edge of an image crop rectangle |
+| `clip_y` | float | `0` | Top edge of an image crop rectangle |
+| `clip_width` | float | `null` | Crop rectangle width for image formats |
+| `clip_height` | float | `null` | Crop rectangle height for image formats |
 | `full_page` | bool | `false` | Capture full page |
 | `selector` | string | `null` | Capture a specific element |
 | `wait_for_selector` | string | `null` | Wait for a selector before capture |
@@ -95,6 +106,8 @@ These are valid for `GET /api/screenshot` and `POST /api/screenshot` unless note
 | `dark_mode` | bool | `false` | Prefer dark theme |
 | `transparent` | bool | `false` | Preserve transparency instead of forcing a white background |
 | `disable_js` | bool | `false` | Disable JavaScript before navigation |
+| `media` | string | `null` | Emulate CSS media: `screen` or `print` |
+| `reduced_motion` | bool | `false` | Request reduced-motion CSS behavior for steadier captures |
 | `css` | string | `null` | Custom CSS to inject |
 | `js` | string | `null` | Custom JS to execute |
 | `hide_selectors` | string | `null` | Comma-separated selectors to hide |
