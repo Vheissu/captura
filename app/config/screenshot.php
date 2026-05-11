@@ -105,6 +105,7 @@ return [
         'max_height' => (int) env('SCREENSHOT_MAX_HEIGHT', 2160),
         'timeout' => (int) env('SCREENSHOT_TIMEOUT', 30),
         'max_delay' => 10000,
+        'max_scroll_offset' => 200000,
         'max_css_length' => 50000,
         'max_js_length' => 50000,
     ],

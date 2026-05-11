@@ -9,12 +9,15 @@ const adPatterns = [
   /adservice\.google/,
 ];
 
+export function isAdRequest(url: string): boolean {
+  return adPatterns.some((pattern) => pattern.test(url));
+}
+
 export async function enableAdBlocking(page: Page): Promise<void> {
   await page.setRequestInterception(true);
 
   page.on('request', (request) => {
-    const url = request.url();
-    if (adPatterns.some((pattern) => pattern.test(url))) {
+    if (isAdRequest(request.url())) {
       request.abort();
     } else {
       request.continue();

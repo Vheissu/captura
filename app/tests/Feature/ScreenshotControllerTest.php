@@ -54,6 +54,38 @@ class ScreenshotControllerTest extends TestCase
             ->assertJsonPath('file_url', 'http://localhost/screenshots/shots/json.png');
     }
 
+    public function test_capture_accepts_output_alias_for_json_response(): void
+    {
+        Config::set('screenshot.storage.public_url', 'http://localhost/screenshots');
+
+        $screenshot = Screenshot::create([
+            'url' => 'https://example.com',
+            'params_hash' => hash('sha256', 'output-json'),
+            'params' => ['url' => 'https://example.com'],
+            'status' => ScreenshotStatus::Completed,
+            'file_path' => 'shots/output-json.png',
+            'file_type' => FileType::Png,
+            'file_size' => 123,
+            'width' => 1280,
+            'height' => 800,
+            'render_time_ms' => 250,
+            'completed_at' => now(),
+        ]);
+
+        $this->mock(ScreenshotService::class, function ($mock) use ($screenshot) {
+            $mock->shouldReceive('capture')->andReturn($screenshot);
+            $mock->shouldReceive('waitForCompletion')->andReturn($screenshot);
+        });
+
+        $response = $this->getJson('/api/screenshot?url=https://example.com&output=json');
+
+        $response->assertOk()
+            ->assertJsonFragment([
+                'id' => $screenshot->id,
+                'status' => 'completed',
+            ]);
+    }
+
     public function test_capture_returns_image_payload(): void
     {
         Storage::fake('screenshots');

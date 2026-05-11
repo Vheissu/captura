@@ -14,7 +14,9 @@ Captura is a free, open-source, self-hosted screenshot API inspired by screensho
 - Full-page, viewport, element, or crop-rectangle capture
 - HiDPI, mobile, touch, landscape, and transparent-background rendering
 - Screen/print CSS media and reduced-motion emulation for steadier captures
-- Custom CSS/JS injection, cookie banner hiding, ad blocking
+- Custom CSS/JS injection, external CSS/JS URLs, and request cookies
+- Lazy-load scrolling, scroll-to-element, click-before-capture, and selector redaction/removal
+- Cookie banner hiding, ad/tracker/chat blocking, and request/resource blocking
 - Built-in caching and webhook notifications
 - Stealth mode, proxy support, and region-aware identity presets
 
@@ -72,6 +74,12 @@ curl "http://localhost/api/screenshot?url=https://example.com&clip_x=0&clip_y=0&
 # Capture with print CSS and reduced motion
 curl "http://localhost/api/screenshot?url=https://example.com&media=print&reduced_motion=1" --output print-css.png
 
+# Trigger lazy-loaded content, click a tab, and blur private text
+curl "http://localhost/api/screenshot?url=https://example.com&lazy_load=1&selector_to_click=.pricing-tab&blur_selector=.email" --output clean.png
+
+# ScreenshotAPI-compatible aliases are accepted for easier migration
+curl "http://localhost/api/screenshot?url=https://example.com&file_type=jpg&image_quality=90&retina=1&wait_for_event=networkidle&fresh=1" --output migrated.jpg
+
 # Proxy pool round robin
 curl "http://localhost/api/screenshot?url=https://example.com&proxy_pool=1&proxy_strategy=round_robin"
 ```
@@ -88,6 +96,7 @@ These are valid for `GET /api/screenshot` and `POST /api/screenshot` unless note
 | `width` | int | `1280` | Viewport width |
 | `height` | int | `800` | Viewport height |
 | `device_scale_factor` | float | `1` | Device pixel ratio / HiDPI scale, 0.1-4 |
+| `retina` | bool | `false` | Alias that uses a 2x device scale unless `device_scale_factor` is set |
 | `mobile` | bool | `false` | Emulate mobile viewport behavior |
 | `touch` | bool | `false` | Enable touch-capable viewport emulation |
 | `landscape` | bool | `false` | Emulate landscape orientation; also prints PDFs landscape |
@@ -98,25 +107,42 @@ These are valid for `GET /api/screenshot` and `POST /api/screenshot` unless note
 | `full_page` | bool | `false` | Capture full page |
 | `selector` | string | `null` | Capture a specific element |
 | `wait_for_selector` | string | `null` | Wait for a selector before capture |
+| `scroll_to_element` | string | `null` | Scroll a selector into view before capture |
+| `adjust_top` | int | `null` | Scroll the viewport to a vertical offset before capture |
+| `lazy_load` | bool | `false` | Scroll through the page to trigger lazy-loaded content before capture |
+| `scroll_delay` | int | `250` | Delay between lazy-load scroll steps, in milliseconds |
+| `selector_to_click` | string | `null` | Click an element before capture |
+| `click_recursion` | int | `1` | Number of times to click `selector_to_click`, 1-10 |
 | `delay` | int | `0` | Delay before capture (ms) |
 | `wait_until` | string | `load` | `load`, `domcontentloaded`, `networkidle` |
 | `timeout` | int | `30` | Timeout in seconds |
 | `block_ads` | bool | `false` | Block ads |
 | `block_cookies` | bool | `false` | Hide cookie banners |
+| `block_tracking` | bool | `false` | Block common analytics/tracking requests |
+| `block_chat_widgets` | bool | `false` | Block common chat widget scripts |
+| `block_resources` | string | `null` | Comma-separated resource types to block, such as `image,font,script` |
+| `block_specific_requests` | string | `null` | Comma-separated URL fragments to block before capture |
 | `dark_mode` | bool | `false` | Prefer dark theme |
+| `grayscale` | int | `0` | Apply grayscale filter intensity, 0-100 |
 | `transparent` | bool | `false` | Preserve transparency instead of forcing a white background |
 | `disable_js` | bool | `false` | Disable JavaScript before navigation |
 | `media` | string | `null` | Emulate CSS media: `screen` or `print` |
 | `reduced_motion` | bool | `false` | Request reduced-motion CSS behavior for steadier captures |
 | `css` | string | `null` | Custom CSS to inject |
+| `css_url` | string | `null` | External stylesheet URL to inject after navigation |
 | `js` | string | `null` | Custom JS to execute |
+| `js_url` | string | `null` | External script URL to execute after navigation |
 | `hide_selectors` | string | `null` | Comma-separated selectors to hide |
+| `remove_selectors` | string | `null` | Comma-separated selectors to remove from the DOM |
+| `blur_selectors` | string | `null` | Comma-separated selectors to blur for redaction |
 | `pdf_format` | string | `a4` | PDF paper format: `letter`, `legal`, `tabloid`, `ledger`, `a0`-`a6` |
 | `pdf_scale` | float | `1` | PDF render scale, 0.1-2 |
 | `prefer_css_page_size` | bool | `false` | Let CSS `@page` size override PDF paper format |
 | `ua_preset` | string | `null` | See Identity presets below |
 | `user_agent` | string | `null` | Custom UA string |
 | `headers` | string | `null` | JSON object of headers |
+| `cookies` | string | `null` | Cookie header string or JSON object/array to set before navigation |
+| `accept_languages` | string | `null` | Alias for setting locale and `Accept-Language` |
 | `locale` | string | `en-US` | Locale override (e.g. `en-US`) |
 | `timezone` | string | `America/Los_Angeles` | IANA timezone |
 | `stealth` | bool | `false` | Enable stealth mode (harder to detect) |
@@ -125,7 +151,20 @@ These are valid for `GET /api/screenshot` and `POST /api/screenshot` unless note
 | `proxy_strategy` | string | `random` | `random` or `round_robin` |
 | `response` | string | `image` | `image` or `json` |
 | `cache` | bool | `true` | Use cached screenshot if available |
+| `fresh` | bool | `false` | Bypass cache lookup and render a new capture |
 | `webhook_url` | string | `null` | Async + bulk only: webhook to notify |
+
+Migration aliases accepted by the API:
+- `file_type` -> `format`
+- `image_quality` -> `quality`
+- `wait_for_event` -> `wait_until`
+- `output` -> `response`
+- `block_js` -> `disable_js`
+- `no_cookie_banners` -> `block_cookies`
+- `omit_background` -> `transparent`
+- `remove_selector` -> `remove_selectors`
+- `blur_selector` -> `blur_selectors`
+- `enable_caching` -> `cache`
 
 ## Identity presets
 

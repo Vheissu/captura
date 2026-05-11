@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Enums\ScreenshotStatus;
-use App\Http\Requests\BulkScreenshotRequest;
 use App\Http\Requests\AsyncScreenshotRequest;
+use App\Http\Requests\BulkScreenshotRequest;
 use App\Http\Requests\CaptureScreenshotRequest;
 use App\Http\Resources\ScreenshotResource;
 use App\Models\Screenshot;
@@ -24,7 +24,7 @@ class ScreenshotController extends Controller
         $params = $request->toParams();
         $screenshot = $this->service->capture($params, $request->ip());
 
-        if (!$screenshot->from_cache) {
+        if (! $screenshot->from_cache) {
             $screenshot = $this->service->waitForCompletion($screenshot, $params->timeout);
         }
 
@@ -36,7 +36,8 @@ class ScreenshotController extends Controller
             ], 500);
         }
 
-        if ($request->input('response') === 'json') {
+        $responseMode = $request->input('response', $request->input('output', 'image'));
+        if ($responseMode === 'json') {
             return response()->json(new ScreenshotResource($screenshot));
         }
 
@@ -85,6 +86,7 @@ class ScreenshotController extends Controller
     public function show(string $id): JsonResponse
     {
         $screenshot = Screenshot::findOrFail($id);
+
         return response()->json(new ScreenshotResource($screenshot));
     }
 }

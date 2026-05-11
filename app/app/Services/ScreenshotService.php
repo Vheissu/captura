@@ -21,6 +21,9 @@ class ScreenshotService
     public function capture(ScreenshotParams $params, ?string $ipAddress = null): Screenshot
     {
         $this->urlValidator->validate($params->url);
+        $this->validateInjectionUrl($params->cssUrl);
+        $this->validateInjectionUrl($params->jsUrl);
+
         $params = $this->applyProxyPool($params);
 
         if (config('screenshot.cache.enabled') && $params->cache) {
@@ -66,6 +69,15 @@ class ScreenshotService
         }
 
         throw new TimeoutException('Screenshot timed out');
+    }
+
+    private function validateInjectionUrl(?string $url): void
+    {
+        if ($url === null || trim($url) === '') {
+            return;
+        }
+
+        $this->urlValidator->validate($url);
     }
 
     private function createCachedCopy(Screenshot $cached, ScreenshotParams $params, ?string $ipAddress): Screenshot

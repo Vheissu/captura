@@ -13,17 +13,26 @@ abstract class ScreenshotRequest extends FormRequest
         'full_page',
         'block_ads',
         'block_cookies',
+        'no_cookie_banners',
+        'block_tracking',
+        'block_chat_widgets',
         'dark_mode',
         'cache',
+        'fresh',
+        'enable_caching',
         'stealth',
         'proxy_pool',
         'mobile',
         'touch',
         'landscape',
         'transparent',
+        'omit_background',
         'disable_js',
+        'block_js',
         'prefer_css_page_size',
         'reduced_motion',
+        'retina',
+        'lazy_load',
     ];
 
     private const UA_PRESETS = [
@@ -69,15 +78,19 @@ abstract class ScreenshotRequest extends FormRequest
         bool $includeWebhook = false,
     ): array {
         $limits = config('screenshot.limits');
+        $maxScrollOffset = $limits['max_scroll_offset'] ?? 200000;
         $field = static fn (string $name): string => $prefix.$name;
 
         $rules = [
             $field('url') => ['required', 'url', 'max:2048'],
             $field('format') => ['sometimes', Rule::in(['png', 'jpg', 'jpeg', 'webp', 'pdf'])],
+            $field('file_type') => ['sometimes', Rule::in(['png', 'jpg', 'jpeg', 'webp', 'pdf'])],
             $field('quality') => ['sometimes', 'integer', 'min:1', 'max:100'],
+            $field('image_quality') => ['sometimes', 'integer', 'min:1', 'max:100'],
             $field('width') => ['sometimes', 'integer', 'min:100', 'max:'.$limits['max_width']],
             $field('height') => ['sometimes', 'integer', 'min:100', 'max:'.$limits['max_height']],
             $field('device_scale_factor') => ['sometimes', 'numeric', 'min:0.1', 'max:4'],
+            $field('retina') => ['sometimes', 'boolean'],
             $field('mobile') => ['sometimes', 'boolean'],
             $field('touch') => ['sometimes', 'boolean'],
             $field('landscape') => ['sometimes', 'boolean'],
@@ -98,19 +111,40 @@ abstract class ScreenshotRequest extends FormRequest
             $field('full_page') => ['sometimes', 'boolean'],
             $field('selector') => ['sometimes', 'string', 'max:500'],
             $field('wait_for_selector') => ['sometimes', 'string', 'max:500'],
+            $field('scroll_to_element') => ['sometimes', 'string', 'max:500'],
+            $field('selector_to_click') => ['sometimes', 'string', 'max:500'],
+            $field('click_recursion') => ['sometimes', 'integer', 'min:1', 'max:10'],
+            $field('adjust_top') => ['sometimes', 'integer', 'min:0', 'max:'.$maxScrollOffset],
+            $field('lazy_load') => ['sometimes', 'boolean'],
+            $field('scroll_delay') => ['sometimes', 'integer', 'min:0', 'max:'.$limits['max_delay']],
             $field('delay') => ['sometimes', 'integer', 'min:0', 'max:'.$limits['max_delay']],
             $field('wait_until') => ['sometimes', Rule::in(['load', 'domcontentloaded', 'networkidle'])],
+            $field('wait_for_event') => ['sometimes', Rule::in(['load', 'domcontentloaded', 'networkidle'])],
             $field('timeout') => ['sometimes', 'integer', 'min:1', 'max:'.$limits['timeout']],
             $field('block_ads') => ['sometimes', 'boolean'],
             $field('block_cookies') => ['sometimes', 'boolean'],
+            $field('no_cookie_banners') => ['sometimes', 'boolean'],
+            $field('block_tracking') => ['sometimes', 'boolean'],
+            $field('block_chat_widgets') => ['sometimes', 'boolean'],
+            $field('block_resources') => ['sometimes', 'string', 'max:500'],
+            $field('block_specific_requests') => ['sometimes', 'string', 'max:2000'],
             $field('dark_mode') => ['sometimes', 'boolean'],
+            $field('grayscale') => ['sometimes', 'integer', 'min:0', 'max:100'],
             $field('transparent') => ['sometimes', 'boolean'],
+            $field('omit_background') => ['sometimes', 'boolean'],
             $field('disable_js') => ['sometimes', 'boolean'],
+            $field('block_js') => ['sometimes', 'boolean'],
             $field('media') => ['sometimes', Rule::in(['screen', 'print'])],
             $field('reduced_motion') => ['sometimes', 'boolean'],
             $field('css') => ['sometimes', 'string', 'max:'.$limits['max_css_length']],
+            $field('css_url') => ['sometimes', 'url', 'max:2048'],
             $field('js') => ['sometimes', 'string', 'max:'.$limits['max_js_length']],
+            $field('js_url') => ['sometimes', 'url', 'max:2048'],
             $field('hide_selectors') => ['sometimes', 'string', 'max:1000'],
+            $field('remove_selectors') => ['sometimes', 'string', 'max:1000'],
+            $field('remove_selector') => ['sometimes', 'string', 'max:1000'],
+            $field('blur_selectors') => ['sometimes', 'string', 'max:1000'],
+            $field('blur_selector') => ['sometimes', 'string', 'max:1000'],
             $field('pdf_format') => ['sometimes', Rule::in([
                 'letter',
                 'legal',
@@ -128,7 +162,9 @@ abstract class ScreenshotRequest extends FormRequest
             $field('prefer_css_page_size') => ['sometimes', 'boolean'],
             $field('ua_preset') => ['sometimes', Rule::in(self::UA_PRESETS)],
             $field('user_agent') => ['sometimes', 'string', 'max:500'],
+            $field('accept_languages') => ['sometimes', 'string', 'max:200'],
             $field('headers') => ['sometimes', 'json'],
+            $field('cookies') => ['sometimes', 'string', 'max:10000'],
             $field('stealth') => ['sometimes', 'boolean'],
             $field('proxy') => ['sometimes', 'string', 'max:2048'],
             $field('proxy_pool') => ['sometimes', 'boolean'],
@@ -136,10 +172,13 @@ abstract class ScreenshotRequest extends FormRequest
             $field('locale') => ['sometimes', 'string', 'max:50'],
             $field('timezone') => ['sometimes', 'string', 'max:100'],
             $field('cache') => ['sometimes', 'boolean'],
+            $field('fresh') => ['sometimes', 'boolean'],
+            $field('enable_caching') => ['sometimes', 'boolean'],
         ];
 
         if ($includeResponse) {
             $rules[$field('response')] = ['sometimes', Rule::in(['image', 'json'])];
+            $rules[$field('output')] = ['sometimes', Rule::in(['image', 'json'])];
         }
 
         if ($includeWebhook) {

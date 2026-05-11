@@ -1,9 +1,9 @@
-import type { MediaFeature, Page, PaperFormat, ScreenshotClip } from 'puppeteer';
+import type { HTTPRequest, MediaFeature, Page, PaperFormat, ScreenshotClip } from 'puppeteer';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { config } from '../config';
 import type { ScreenshotParams } from '../types';
-import { enableAdBlocking } from '../plugins/adblock';
+import { isAdRequest } from '../plugins/adblock';
 import { hideCookieBanners } from '../plugins/cookies';
 import { logger } from '../utils/logger';
 
@@ -18,6 +18,26 @@ const waitUntilMap = {
   domcontentloaded: 'domcontentloaded',
   networkidle: 'networkidle2',
 } as const;
+
+const trackingPatterns = [
+  /google-analytics\.com/,
+  /googletagmanager\.com/,
+  /segment\.io/,
+  /mixpanel\.com/,
+  /hotjar\.com/,
+  /plausible\.io/,
+  /clarity\.ms/,
+];
+
+const chatWidgetPatterns = [
+  /intercom\.io/,
+  /intercomcdn\.com/,
+  /drift\.com/,
+  /crisp\.chat/,
+  /zendesk\.com/,
+  /livechatinc\.com/,
+  /tawk\.to/,
+];
 
 export async function renderScreenshot(
   page: Page,
@@ -98,12 +118,17 @@ export async function renderScreenshot(
     await page.emulateMediaFeatures(mediaFeatures);
   }
 
-  if (params.block_ads) {
-    await enableAdBlocking(page);
-  }
+  await configureRequestBlocking(page, params);
 
   if (params.disable_js) {
     await page.setJavaScriptEnabled(false);
+  }
+
+  if (params.cookies) {
+    const cookies = parseCookies(params.cookies, params.url);
+    if (cookies.length > 0) {
+      await page.setCookie(...cookies);
+    }
   }
 
   await page.goto(params.url, {
@@ -125,16 +150,58 @@ export async function renderScreenshot(
     await hideCookieBanners(page);
   }
 
-  if (params.hide_selectors.length > 0) {
-    await hideElements(page, params.hide_selectors);
+  const hideSelectors = params.hide_selectors || [];
+  const removeSelectors = params.remove_selectors || [];
+  const blurSelectors = params.blur_selectors || [];
+
+  if (hideSelectors.length > 0) {
+    await hideElements(page, hideSelectors);
+  }
+
+  if (removeSelectors.length > 0) {
+    await removeElements(page, removeSelectors);
+  }
+
+  if (blurSelectors.length > 0) {
+    await blurElements(page, blurSelectors);
+  }
+
+  if (params.css_url) {
+    await page.addStyleTag({ url: params.css_url });
   }
 
   if (params.css) {
     await page.addStyleTag({ content: params.css });
   }
 
+  if (params.js_url) {
+    await page.addScriptTag({ url: params.js_url });
+  }
+
   if (params.js) {
     await page.evaluate(params.js);
+  }
+
+  if (params.selector_to_click) {
+    await clickSelector(page, params.selector_to_click, params.click_recursion || 1, params.timeout);
+  }
+
+  if (params.lazy_load) {
+    await triggerLazyLoad(page, params.scroll_delay ?? 250);
+  }
+
+  if (params.scroll_to_element) {
+    await scrollToElement(page, params.scroll_to_element, params.timeout);
+  }
+
+  if (typeof params.adjust_top === 'number') {
+    await page.evaluate((top) => window.scrollTo(0, top), params.adjust_top);
+  }
+
+  if ((params.grayscale || 0) > 0) {
+    await page.addStyleTag({
+      content: `html { filter: grayscale(${params.grayscale}%); }`,
+    });
   }
 
   if (params.delay > 0) {
@@ -208,6 +275,177 @@ export async function renderScreenshot(
 async function hideElements(page: Page, selectors: string[]): Promise<void> {
   const css = selectors.map((s) => `${s} { display: none !important; }`).join('\n');
   await page.addStyleTag({ content: css });
+}
+
+async function removeElements(page: Page, selectors: string[]): Promise<void> {
+  await page.evaluate((items) => {
+    for (const selector of items) {
+      document.querySelectorAll(selector).forEach((element) => element.remove());
+    }
+  }, selectors);
+}
+
+async function blurElements(page: Page, selectors: string[]): Promise<void> {
+  const css = selectors
+    .map((s) => `${s} { filter: blur(8px) !important; }`)
+    .join('\n');
+  await page.addStyleTag({ content: css });
+}
+
+async function clickSelector(
+  page: Page,
+  selector: string,
+  recursion: number,
+  timeoutSeconds: number
+): Promise<void> {
+  await page.waitForSelector(selector, { timeout: timeoutSeconds * 1000 });
+
+  for (let index = 0; index < Math.max(1, recursion); index += 1) {
+    await page.click(selector);
+    await sleep(100);
+  }
+}
+
+async function triggerLazyLoad(page: Page, scrollDelay: number): Promise<void> {
+  const originalY = await page.evaluate(() => window.scrollY);
+  const viewportHeight = page.viewport()?.height || 800;
+  const documentHeight = await page.evaluate(() =>
+    Math.max(
+      document.body.scrollHeight,
+      document.body.offsetHeight,
+      document.documentElement.clientHeight,
+      document.documentElement.scrollHeight,
+      document.documentElement.offsetHeight
+    )
+  );
+  const step = Math.max(100, Math.floor(viewportHeight * 0.75));
+
+  for (let y = 0; y < documentHeight; y += step) {
+    await page.evaluate((scrollY) => window.scrollTo(0, scrollY), y);
+    await sleep(scrollDelay);
+  }
+
+  await page.evaluate((scrollY) => window.scrollTo(0, scrollY), originalY);
+}
+
+async function scrollToElement(
+  page: Page,
+  selector: string,
+  timeoutSeconds: number
+): Promise<void> {
+  const element = await page.waitForSelector(selector, { timeout: timeoutSeconds * 1000 });
+  if (!element) {
+    throw new Error(`Scroll selector not found before timeout: ${selector}`);
+  }
+
+  await element.evaluate((node) => {
+    node.scrollIntoView({ block: 'start', inline: 'nearest' });
+  });
+}
+
+async function configureRequestBlocking(page: Page, params: ScreenshotParams): Promise<void> {
+  const blockedResources = new Set(params.block_resources || []);
+  const blockedUrlFragments = params.block_specific_requests || [];
+  const shouldIntercept =
+    params.block_ads ||
+    params.block_tracking ||
+    params.block_chat_widgets ||
+    blockedResources.size > 0 ||
+    blockedUrlFragments.length > 0;
+
+  if (!shouldIntercept) {
+    return;
+  }
+
+  await page.setRequestInterception(true);
+  page.on('request', (request) => {
+    if (shouldBlockRequest(request, params, blockedResources, blockedUrlFragments)) {
+      request.abort();
+      return;
+    }
+
+    request.continue();
+  });
+}
+
+function shouldBlockRequest(
+  request: HTTPRequest,
+  params: ScreenshotParams,
+  blockedResources: Set<string>,
+  blockedUrlFragments: string[]
+): boolean {
+  const url = request.url();
+  if (params.block_ads && isAdRequest(url)) {
+    return true;
+  }
+
+  if (params.block_tracking && trackingPatterns.some((pattern) => pattern.test(url))) {
+    return true;
+  }
+
+  if (params.block_chat_widgets && chatWidgetPatterns.some((pattern) => pattern.test(url))) {
+    return true;
+  }
+
+  if (blockedResources.has(request.resourceType())) {
+    return true;
+  }
+
+  return blockedUrlFragments.some((fragment) => fragment !== '' && url.includes(fragment));
+}
+
+function parseCookies(value: string, url: string): Array<Parameters<Page['setCookie']>[0]> {
+  const trimmed = value.trim();
+  if (trimmed === '') {
+    return [];
+  }
+
+  if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed)) {
+        return parsed
+          .filter((cookie) => cookie && typeof cookie.name === 'string')
+          .map((cookie) => ({ url, ...cookie }));
+      }
+
+      if (parsed && typeof parsed === 'object') {
+        return Object.entries(parsed).map(([name, cookieValue]) => ({
+          name,
+          value: String(cookieValue),
+          url,
+        }));
+      }
+    } catch {
+      throw new Error('Invalid cookies JSON');
+    }
+  }
+
+  const cookies: Array<Parameters<Page['setCookie']>[0]> = [];
+  for (const part of trimmed.split(';')) {
+    const cookie = part.trim();
+    const separator = cookie.indexOf('=');
+    if (separator === -1) {
+      continue;
+    }
+
+    const name = cookie.slice(0, separator).trim();
+    if (name === '') {
+      continue;
+    }
+
+    cookies.push({
+      name,
+      value: cookie.slice(separator + 1).trim(),
+      url,
+    });
+  }
+
+  return cookies;
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function getScreenshotClip(params: ScreenshotParams): ScreenshotClip | undefined {

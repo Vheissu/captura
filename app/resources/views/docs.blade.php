@@ -342,6 +342,7 @@
                     <button class="btn preset" type="button" data-preset="adfreeDark">Ad-free dark</button>
                     <button class="btn preset" type="button" data-preset="og">OG image 1200x630</button>
                     <button class="btn preset" type="button" data-preset="archive">Archive clean</button>
+                    <button class="btn preset" type="button" data-preset="interactive">Click + lazy load</button>
                 </div>
             </div>
             <details class="advanced">
@@ -369,6 +370,26 @@
                         <div>
                             <label for="wait_for_selector">Wait for selector</label>
                             <input id="wait_for_selector" name="wait_for_selector" type="text" placeholder=".loaded, #app-ready">
+                        </div>
+                    </div>
+                    <div class="inline">
+                        <div>
+                            <label for="scroll_to_element">Scroll to selector</label>
+                            <input id="scroll_to_element" name="scroll_to_element" type="text" placeholder="#pricing, .footer">
+                        </div>
+                        <div>
+                            <label for="adjust_top">Scroll offset</label>
+                            <input id="adjust_top" name="adjust_top" type="number" min="0" step="1" placeholder="500">
+                        </div>
+                    </div>
+                    <div class="inline">
+                        <div>
+                            <label for="selector_to_click">Click selector</label>
+                            <input id="selector_to_click" name="selector_to_click" type="text" placeholder=".tab, #accept">
+                        </div>
+                        <div>
+                            <label for="click_recursion">Click count</label>
+                            <input id="click_recursion" name="click_recursion" type="number" min="1" max="10" value="1">
                         </div>
                     </div>
                     <div class="inline">
@@ -406,6 +427,18 @@
                         <div class="toggle">
                             <input id="block_cookies" name="block_cookies" type="checkbox" value="1">
                             <label for="block_cookies">Hide cookie banners</label>
+                        </div>
+                        <div class="toggle">
+                            <input id="block_tracking" name="block_tracking" type="checkbox" value="1">
+                            <label for="block_tracking">Block trackers</label>
+                        </div>
+                        <div class="toggle">
+                            <input id="block_chat_widgets" name="block_chat_widgets" type="checkbox" value="1">
+                            <label for="block_chat_widgets">Block chat widgets</label>
+                        </div>
+                        <div class="toggle">
+                            <input id="lazy_load" name="lazy_load" type="checkbox" value="1">
+                            <label for="lazy_load">Trigger lazy loading</label>
                         </div>
                         <div class="toggle">
                             <input id="dark_mode" name="dark_mode" type="checkbox" value="1">
@@ -458,8 +491,28 @@
                             <input id="pdf_scale" name="pdf_scale" type="number" min="0.1" max="2" step="0.1" value="1">
                         </div>
                         <div>
+                            <label for="scroll_delay">Scroll delay (ms)</label>
+                            <input id="scroll_delay" name="scroll_delay" type="number" min="0" step="10" value="250">
+                        </div>
+                    </div>
+                    <div class="inline">
+                        <div>
                             <label for="hide_selectors">Hide selectors</label>
                             <input id="hide_selectors" name="hide_selectors" type="text" placeholder=".ads,.cookie">
+                        </div>
+                        <div>
+                            <label for="remove_selectors">Remove selectors</label>
+                            <input id="remove_selectors" name="remove_selectors" type="text" placeholder=".newsletter,#modal">
+                        </div>
+                    </div>
+                    <div class="inline">
+                        <div>
+                            <label for="blur_selectors">Blur selectors</label>
+                            <input id="blur_selectors" name="blur_selectors" type="text" placeholder=".email,.account">
+                        </div>
+                        <div>
+                            <label for="grayscale">Grayscale</label>
+                            <input id="grayscale" name="grayscale" type="number" min="0" max="100" step="1" value="0">
                         </div>
                     </div>
                     <div class="inline">
@@ -490,6 +543,10 @@
                         <label for="headers">Headers (JSON)</label>
                         <textarea id="headers" name="headers" placeholder='{"X-Example":"1"}'></textarea>
                     </div>
+                    <div>
+                        <label for="cookies">Cookies</label>
+                        <textarea id="cookies" name="cookies" placeholder="session=abc; theme=dark"></textarea>
+                    </div>
                     <div class="inline">
                         <div>
                             <label for="locale">Locale</label>
@@ -511,13 +568,31 @@
                             <option value="round_robin">Round robin</option>
                         </select>
                     </div>
+                    <div class="inline">
+                        <div>
+                            <label for="block_resources">Block resources</label>
+                            <input id="block_resources" name="block_resources" type="text" placeholder="image,font,script">
+                        </div>
+                        <div>
+                            <label for="block_specific_requests">Block URL fragments</label>
+                            <input id="block_specific_requests" name="block_specific_requests" type="text" placeholder="analytics.js,chat.js">
+                        </div>
+                    </div>
                     <div>
                         <label for="css">Inject CSS</label>
                         <textarea id="css" name="css" placeholder="body { background: #fff; }"></textarea>
                     </div>
                     <div>
+                        <label for="css_url">Inject CSS URL</label>
+                        <input id="css_url" name="css_url" type="url" placeholder="https://example.com/capture.css">
+                    </div>
+                    <div>
                         <label for="js">Execute JS</label>
                         <textarea id="js" name="js" placeholder="document.title = 'Captura';"></textarea>
+                    </div>
+                    <div>
+                        <label for="js_url">Execute JS URL</label>
+                        <input id="js_url" name="js_url" type="url" placeholder="https://example.com/capture.js">
                     </div>
                 </div>
             </details>
@@ -570,6 +645,7 @@
         <tr><td>width</td><td>int</td><td>1280</td><td>Viewport width</td></tr>
         <tr><td>height</td><td>int</td><td>800</td><td>Viewport height</td></tr>
         <tr><td>device_scale_factor</td><td>float</td><td>1</td><td>Device pixel ratio / HiDPI scale, 0.1-4</td></tr>
+        <tr><td>retina</td><td>bool</td><td>false</td><td>Use 2x device scale unless device scale is set directly</td></tr>
         <tr><td>mobile</td><td>bool</td><td>false</td><td>Emulate mobile viewport behavior</td></tr>
         <tr><td>touch</td><td>bool</td><td>false</td><td>Enable touch-capable viewport emulation</td></tr>
         <tr><td>landscape</td><td>bool</td><td>false</td><td>Emulate landscape orientation; also prints PDFs landscape</td></tr>
@@ -580,25 +656,42 @@
         <tr><td>full_page</td><td>bool</td><td>false</td><td>Capture full page</td></tr>
         <tr><td>selector</td><td>string</td><td>null</td><td>Capture a specific element</td></tr>
         <tr><td>wait_for_selector</td><td>string</td><td>null</td><td>Wait for a selector before capture</td></tr>
+        <tr><td>scroll_to_element</td><td>string</td><td>null</td><td>Scroll a selector into view before capture</td></tr>
+        <tr><td>adjust_top</td><td>int</td><td>null</td><td>Scroll to a vertical offset before capture</td></tr>
+        <tr><td>lazy_load</td><td>bool</td><td>false</td><td>Scroll through the page to trigger lazy-loaded content</td></tr>
+        <tr><td>scroll_delay</td><td>int</td><td>250</td><td>Delay between lazy-load scroll steps, in milliseconds</td></tr>
+        <tr><td>selector_to_click</td><td>string</td><td>null</td><td>Click an element before capture</td></tr>
+        <tr><td>click_recursion</td><td>int</td><td>1</td><td>Number of clicks for selector_to_click, 1-10</td></tr>
         <tr><td>delay</td><td>int</td><td>0</td><td>Delay before capture (ms)</td></tr>
         <tr><td>wait_until</td><td>string</td><td>load</td><td>load, domcontentloaded, networkidle</td></tr>
         <tr><td>timeout</td><td>int</td><td>30</td><td>Timeout in seconds</td></tr>
         <tr><td>block_ads</td><td>bool</td><td>false</td><td>Block ads</td></tr>
         <tr><td>block_cookies</td><td>bool</td><td>false</td><td>Hide cookie banners</td></tr>
+        <tr><td>block_tracking</td><td>bool</td><td>false</td><td>Block common analytics/tracking requests</td></tr>
+        <tr><td>block_chat_widgets</td><td>bool</td><td>false</td><td>Block common chat widget scripts</td></tr>
+        <tr><td>block_resources</td><td>string</td><td>null</td><td>Comma-separated resource types to block, such as image,font,script</td></tr>
+        <tr><td>block_specific_requests</td><td>string</td><td>null</td><td>Comma-separated URL fragments to block</td></tr>
         <tr><td>dark_mode</td><td>bool</td><td>false</td><td>Prefer dark theme</td></tr>
+        <tr><td>grayscale</td><td>int</td><td>0</td><td>Apply grayscale filter intensity, 0-100</td></tr>
         <tr><td>transparent</td><td>bool</td><td>false</td><td>Preserve transparency instead of forcing a white background</td></tr>
         <tr><td>disable_js</td><td>bool</td><td>false</td><td>Disable JavaScript before navigation</td></tr>
         <tr><td>media</td><td>string</td><td>null</td><td>Emulate screen or print CSS media</td></tr>
         <tr><td>reduced_motion</td><td>bool</td><td>false</td><td>Request reduced-motion CSS behavior for steadier captures</td></tr>
         <tr><td>css</td><td>string</td><td>null</td><td>Custom CSS to inject</td></tr>
+        <tr><td>css_url</td><td>string</td><td>null</td><td>External CSS URL to inject</td></tr>
         <tr><td>js</td><td>string</td><td>null</td><td>Custom JS to execute</td></tr>
+        <tr><td>js_url</td><td>string</td><td>null</td><td>External JS URL to execute</td></tr>
         <tr><td>hide_selectors</td><td>string</td><td>null</td><td>Comma-separated selectors to hide</td></tr>
+        <tr><td>remove_selectors</td><td>string</td><td>null</td><td>Comma-separated selectors to remove from the DOM</td></tr>
+        <tr><td>blur_selectors</td><td>string</td><td>null</td><td>Comma-separated selectors to blur for redaction</td></tr>
         <tr><td>pdf_format</td><td>string</td><td>a4</td><td>PDF paper format: letter, legal, tabloid, ledger, a0-a6</td></tr>
         <tr><td>pdf_scale</td><td>float</td><td>1</td><td>PDF render scale, 0.1-2</td></tr>
         <tr><td>prefer_css_page_size</td><td>bool</td><td>false</td><td>Let CSS @page size override PDF paper format</td></tr>
         <tr><td>ua_preset</td><td>string</td><td>null</td><td>chrome-mac, chrome-win, safari-mac, iphone, firefox-win, region-us, region-uk, region-eu, region-au, region-jp, rotate</td></tr>
         <tr><td>user_agent</td><td>string</td><td>null</td><td>Custom UA string</td></tr>
         <tr><td>headers</td><td>string</td><td>null</td><td>JSON object of headers</td></tr>
+        <tr><td>cookies</td><td>string</td><td>null</td><td>Cookie header string or JSON cookie object/array</td></tr>
+        <tr><td>accept_languages</td><td>string</td><td>null</td><td>Alias for locale and Accept-Language</td></tr>
         <tr><td>locale</td><td>string</td><td>en-US</td><td>Locale override (e.g. en-US)</td></tr>
         <tr><td>timezone</td><td>string</td><td>America/Los_Angeles</td><td>Timezone override (IANA)</td></tr>
         <tr><td>stealth</td><td>bool</td><td>false</td><td>Enable stealth mode (harder to detect)</td></tr>
@@ -607,6 +700,7 @@
         <tr><td>proxy_strategy</td><td>string</td><td>random</td><td>random or round_robin</td></tr>
         <tr><td>response</td><td>string</td><td>image</td><td>image or json</td></tr>
         <tr><td>cache</td><td>bool</td><td>true</td><td>Use cached screenshot if available</td></tr>
+        <tr><td>fresh</td><td>bool</td><td>false</td><td>Bypass cache lookup and render a new capture</td></tr>
         </tbody>
     </table>
 </section>
@@ -737,9 +831,22 @@
                 format: 'png',
                 response: 'image',
                 full_page: true,
+                lazy_load: true,
                 block_ads: true,
                 block_cookies: true,
+                block_tracking: true,
                 hide_selectors: '.newsletter,.subscribe,.paywall',
+                wait_until: 'networkidle',
+            },
+            interactive: {
+                format: 'png',
+                response: 'image',
+                full_page: false,
+                lazy_load: true,
+                scroll_delay: 250,
+                selector_to_click: '.tab',
+                click_recursion: 1,
+                scroll_to_element: '.results',
                 wait_until: 'networkidle',
             },
         };
@@ -754,6 +861,10 @@
         setField('pdf_scale', 1);
         setField('selector', '');
         setField('wait_for_selector', '');
+        setField('scroll_to_element', '');
+        setField('adjust_top', '');
+        setField('selector_to_click', '');
+        setField('click_recursion', 1);
         setField('media', '');
         setField('clip_x', '');
         setField('clip_y', '');
@@ -761,6 +872,9 @@
         setField('clip_height', '');
         setField('block_ads', false);
         setField('block_cookies', false);
+        setField('block_tracking', false);
+        setField('block_chat_widgets', false);
+        setField('lazy_load', false);
         setField('dark_mode', false);
         setField('mobile', false);
         setField('touch', false);
@@ -772,15 +886,24 @@
         setField('stealth', false);
         setField('proxy_pool', false);
         setField('hide_selectors', '');
+        setField('remove_selectors', '');
+        setField('blur_selectors', '');
+        setField('grayscale', 0);
+        setField('scroll_delay', 250);
         setField('user_agent', '');
         setField('ua_preset', '');
         setField('headers', '');
+        setField('cookies', '');
         setField('proxy', '');
         setField('proxy_strategy', 'random');
+        setField('block_resources', '');
+        setField('block_specific_requests', '');
         setField('locale', '');
         setField('timezone', '');
         setField('css', '');
+        setField('css_url', '');
         setField('js', '');
+        setField('js_url', '');
         setField('cache', true);
 
         setField('format', preset.format || 'png');
@@ -799,6 +922,18 @@
         if (typeof preset.wait_for_selector !== 'undefined') {
             setField('wait_for_selector', preset.wait_for_selector);
         }
+        if (typeof preset.scroll_to_element !== 'undefined') {
+            setField('scroll_to_element', preset.scroll_to_element);
+        }
+        if (typeof preset.adjust_top !== 'undefined') {
+            setField('adjust_top', preset.adjust_top);
+        }
+        if (typeof preset.selector_to_click !== 'undefined') {
+            setField('selector_to_click', preset.selector_to_click);
+        }
+        if (typeof preset.click_recursion !== 'undefined') {
+            setField('click_recursion', preset.click_recursion);
+        }
         if (typeof preset.media !== 'undefined') {
             setField('media', preset.media);
         }
@@ -816,6 +951,9 @@
         }
         setField('block_ads', !!preset.block_ads);
         setField('block_cookies', !!preset.block_cookies);
+        setField('block_tracking', !!preset.block_tracking);
+        setField('block_chat_widgets', !!preset.block_chat_widgets);
+        setField('lazy_load', !!preset.lazy_load);
         setField('dark_mode', !!preset.dark_mode);
         setField('mobile', !!preset.mobile);
         setField('touch', !!preset.touch);
@@ -829,6 +967,9 @@
         }
         if (preset.hide_selectors) {
             setField('hide_selectors', preset.hide_selectors);
+        }
+        if (typeof preset.scroll_delay !== 'undefined') {
+            setField('scroll_delay', preset.scroll_delay);
         }
         if (proxyPoolToggle && proxyStrategySelect) {
             proxyStrategySelect.disabled = !proxyPoolToggle.checked;
