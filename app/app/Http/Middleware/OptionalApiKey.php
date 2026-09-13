@@ -14,7 +14,7 @@ class OptionalApiKey
     public function handle(Request $request, Closure $next): Response
     {
         $apiKey = config('screenshot.security.api_key');
-        if (!$apiKey) {
+        if (! $apiKey) {
             return $next($request);
         }
 
@@ -22,7 +22,7 @@ class OptionalApiKey
             ?? $request->header('X-API-Key')
             ?? $request->query('api_key');
 
-        if (!$provided || $provided !== $apiKey) {
+        if (! is_string($provided) || ! hash_equals((string) $apiKey, $provided)) {
             return response()->json([
                 'error' => true,
                 'code' => ErrorCode::Unauthorized->value,

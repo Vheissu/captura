@@ -1,4 +1,4 @@
-import type { HTTPRequest, MediaFeature, Page, PaperFormat, ScreenshotClip } from 'puppeteer';
+import type { ElementHandle, HTTPRequest, MediaFeature, Page, PaperFormat, ScreenshotClip } from 'puppeteer';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { config } from '../config';
@@ -11,7 +11,11 @@ interface RenderResult {
   fileSize: number;
   width: number;
   height: number;
+  extractedHtml?: string;
+  extractedText?: string;
 }
+
+const MAX_EXTRACTED_LENGTH = 1_000_000;
 
 const waitUntilMap = {
   load: 'load',
@@ -208,7 +212,20 @@ export async function renderScreenshot(
     await new Promise((resolve) => setTimeout(resolve, params.delay));
   }
 
-  let element = null;
+  let extractedHtml: string | undefined;
+  let extractedText: string | undefined;
+  if (params.extract_html) {
+    extractedHtml = (
+      await page.evaluate(() => document.documentElement?.outerHTML ?? '')
+    ).slice(0, MAX_EXTRACTED_LENGTH);
+  }
+  if (params.extract_text) {
+    extractedText = (
+      await page.evaluate(() => document.body?.innerText ?? '')
+    ).slice(0, MAX_EXTRACTED_LENGTH);
+  }
+
+  let element: ElementHandle | null = null;
   if (params.selector) {
     element = await page.$(params.selector);
     if (!element) {
@@ -263,13 +280,62 @@ export async function renderScreenshot(
   }
 
   const stats = await fs.stat(fullPath);
-  const viewport = page.viewport();
+  const dimensions = await resolveResultDimensions(page, params, element, clip);
 
   return {
     fileSize: stats.size,
-    width: clip && !element ? Math.round(clip.width) : viewport?.width || params.width,
-    height: clip && !element ? Math.round(clip.height) : viewport?.height || params.height,
+    width: dimensions.width,
+    height: dimensions.height,
+    extractedHtml,
+    extractedText,
   };
+}
+
+async function resolveResultDimensions(
+  page: Page,
+  params: ScreenshotParams,
+  element: ElementHandle | null,
+  clip: ScreenshotClip | undefined
+): Promise<{ width: number; height: number }> {
+  const viewport = page.viewport();
+  const fallback = {
+    width: viewport?.width || params.width,
+    height: viewport?.height || params.height,
+  };
+
+  if (element) {
+    const box = await element.boundingBox();
+    if (box) {
+      return { width: Math.round(box.width), height: Math.round(box.height) };
+    }
+    return fallback;
+  }
+
+  if (clip) {
+    return { width: Math.round(clip.width), height: Math.round(clip.height) };
+  }
+
+  if (params.format !== 'pdf' && params.full_page) {
+    try {
+      const size = await page.evaluate(() => ({
+        width: Math.max(
+          document.body.scrollWidth,
+          document.documentElement.scrollWidth
+        ),
+        height: Math.max(
+          document.body.scrollHeight,
+          document.documentElement.scrollHeight
+        ),
+      }));
+      if (size.width > 0 && size.height > 0) {
+        return { width: Math.round(size.width), height: Math.round(size.height) };
+      }
+    } catch {
+      // fall through to the viewport fallback
+    }
+  }
+
+  return fallback;
 }
 
 async function hideElements(page: Page, selectors: string[]): Promise<void> {

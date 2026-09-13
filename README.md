@@ -150,6 +150,8 @@ These are valid for `GET /api/screenshot` and `POST /api/screenshot` unless note
 | `proxy_pool` | bool | `false` | Use configured proxy pool |
 | `proxy_strategy` | string | `random` | `random` or `round_robin` |
 | `response` | string | `image` | `image` or `json` |
+| `extract_html` | bool | `false` | Capture the rendered page HTML alongside the screenshot (JSON responses and `GET /api/screenshot/{id}`) |
+| `extract_text` | bool | `false` | Capture the rendered page text alongside the screenshot |
 | `cache` | bool | `true` | Use cached screenshot if available |
 | `fresh` | bool | `false` | Bypass cache lookup and render a new capture |
 | `webhook_url` | string | `null` | Async + bulk only: webhook to notify |
@@ -196,6 +198,7 @@ Storage
 Security
 - `SCREENSHOT_RATE_LIMIT`
 - `SCREENSHOT_API_KEY`
+- `SCREENSHOT_WEBHOOK_SECRET` (signs webhook payloads with an `X-Captura-Signature` HMAC header)
 - `SCREENSHOT_BLOCKED_HOSTS`
 - `SCREENSHOT_ALLOW_LOCALHOST`
 - `SCREENSHOT_ALLOWED_HOSTS` (comma-separated allowlist; overrides blocklist/private IP checks)
@@ -212,7 +215,8 @@ Proxy pool
 - `SCREENSHOT_PROXY_CACHE_KEY`
 
 Cleanup
-- `SCREENSHOT_CLEANUP_AFTER`
+- `SCREENSHOT_CLEANUP_AFTER` (hours before completed screenshots are deleted)
+- `SCREENSHOT_STUCK_AFTER_MINUTES` (minutes before pending/processing jobs are marked failed; 0 disables)
 
 ## Notes on stealth and proxies
 

@@ -33,6 +33,8 @@ abstract class ScreenshotRequest extends FormRequest
         'reduced_motion',
         'retina',
         'lazy_load',
+        'extract_html',
+        'extract_text',
     ];
 
     private const UA_PRESETS = [
@@ -174,6 +176,8 @@ abstract class ScreenshotRequest extends FormRequest
             $field('cache') => ['sometimes', 'boolean'],
             $field('fresh') => ['sometimes', 'boolean'],
             $field('enable_caching') => ['sometimes', 'boolean'],
+            $field('extract_html') => ['sometimes', 'boolean'],
+            $field('extract_text') => ['sometimes', 'boolean'],
         ];
 
         if ($includeResponse) {

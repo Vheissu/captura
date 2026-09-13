@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Enums\ErrorCode;
 use App\Enums\ScreenshotStatus;
 use App\Http\Requests\AsyncScreenshotRequest;
 use App\Http\Requests\BulkScreenshotRequest;
@@ -41,11 +42,25 @@ class ScreenshotController extends Controller
             return response()->json(new ScreenshotResource($screenshot));
         }
 
-        $content = Storage::disk('screenshots')->get($screenshot->file_path);
+        try {
+            $content = $screenshot->file_path
+                ? Storage::disk(config('screenshot.storage.disk'))->get($screenshot->file_path)
+                : null;
+        } catch (\Throwable) {
+            $content = null;
+        }
+
+        if ($content === null) {
+            return response()->json([
+                'error' => true,
+                'code' => ErrorCode::NotFound->value,
+                'message' => 'Screenshot file is no longer available',
+            ], ErrorCode::NotFound->httpStatus());
+        }
 
         return response($content)
             ->header('Content-Type', $screenshot->file_type?->mimeType() ?? 'application/octet-stream')
-            ->header('Content-Length', $screenshot->file_size)
+            ->header('Content-Length', strlen($content))
             ->header('X-Screenshot-Id', $screenshot->id);
     }
 

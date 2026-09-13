@@ -215,4 +215,153 @@ class ScreenshotControllerTest extends TestCase
                 'height' => 600,
             ]);
     }
+
+    public function test_capture_returns_error_payload_when_render_fails(): void
+    {
+        $screenshot = Screenshot::create([
+            'url' => 'https://example.com',
+            'params_hash' => hash('sha256', 'failed'),
+            'params' => ['url' => 'https://example.com'],
+            'status' => ScreenshotStatus::Failed,
+            'error_code' => 'RENDER_FAILED',
+            'error_message' => 'Render exploded',
+            'completed_at' => now(),
+        ]);
+
+        $this->mock(ScreenshotService::class, function ($mock) use ($screenshot) {
+            $mock->shouldReceive('capture')->andReturn($screenshot);
+            $mock->shouldReceive('waitForCompletion')->andReturn($screenshot);
+        });
+
+        $response = $this->getJson('/api/screenshot?url=https://example.com');
+
+        $response->assertStatus(500)
+            ->assertJson([
+                'error' => true,
+                'code' => 'RENDER_FAILED',
+                'message' => 'Render exploded',
+            ]);
+    }
+
+    public function test_capture_returns_404_when_file_is_missing(): void
+    {
+        Storage::fake('screenshots');
+        Config::set('screenshot.storage.disk', 'screenshots');
+
+        $screenshot = Screenshot::create([
+            'url' => 'https://example.com',
+            'params_hash' => hash('sha256', 'gone'),
+            'params' => ['url' => 'https://example.com'],
+            'status' => ScreenshotStatus::Completed,
+            'file_path' => 'shots/missing.png',
+            'file_type' => FileType::Png,
+            'file_size' => 10,
+            'completed_at' => now(),
+        ]);
+
+        $this->mock(ScreenshotService::class, function ($mock) use ($screenshot) {
+            $mock->shouldReceive('capture')->andReturn($screenshot);
+            $mock->shouldReceive('waitForCompletion')->andReturn($screenshot);
+        });
+
+        $response = $this->getJson('/api/screenshot?url=https://example.com');
+
+        $response->assertNotFound()
+            ->assertJson([
+                'error' => true,
+                'code' => 'NOT_FOUND',
+            ]);
+    }
+
+    public function test_show_includes_error_details_for_failed_screenshots(): void
+    {
+        $screenshot = Screenshot::create([
+            'url' => 'https://example.com',
+            'params_hash' => hash('sha256', 'failed-show'),
+            'params' => ['url' => 'https://example.com'],
+            'status' => ScreenshotStatus::Failed,
+            'error_code' => 'RENDER_TIMEOUT',
+            'error_message' => 'Navigation timed out',
+            'completed_at' => now(),
+        ]);
+
+        $response = $this->getJson("/api/screenshot/{$screenshot->id}");
+
+        $response->assertOk()
+            ->assertJson([
+                'status' => 'failed',
+                'error_code' => 'RENDER_TIMEOUT',
+                'error_message' => 'Navigation timed out',
+            ]);
+    }
+
+    public function test_show_returns_404_for_unknown_id(): void
+    {
+        $this->getJson('/api/screenshot/'.(string) \Illuminate\Support\Str::uuid())
+            ->assertNotFound()
+            ->assertJson([
+                'error' => true,
+                'code' => 'NOT_FOUND',
+            ]);
+    }
+
+    public function test_requests_are_rejected_when_api_key_is_configured(): void
+    {
+        Config::set('screenshot.security.api_key', 'test-key');
+
+        $this->getJson('/api/screenshot?url=https://example.com')
+            ->assertUnauthorized()
+            ->assertJson([
+                'error' => true,
+                'code' => 'UNAUTHORIZED',
+            ]);
+    }
+
+    public function test_valid_api_key_passes_middleware(): void
+    {
+        Config::set('screenshot.security.api_key', 'test-key');
+
+        $screenshot = Screenshot::create([
+            'url' => 'https://example.com',
+            'params_hash' => hash('sha256', 'auth'),
+            'params' => ['url' => 'https://example.com'],
+            'status' => ScreenshotStatus::Completed,
+            'from_cache' => true,
+            'completed_at' => now(),
+        ]);
+
+        $this->mock(ScreenshotService::class, function ($mock) use ($screenshot) {
+            $mock->shouldReceive('capture')->andReturn($screenshot);
+        });
+
+        $this->getJson('/api/screenshot?url=https://example.com&response=json', [
+            'Authorization' => 'Bearer test-key',
+        ])->assertOk();
+    }
+
+    public function test_rate_limit_rejects_excess_requests(): void
+    {
+        Config::set('screenshot.security.rate_limit', 1);
+
+        $screenshot = Screenshot::create([
+            'url' => 'https://example.com',
+            'params_hash' => hash('sha256', 'rl'),
+            'params' => ['url' => 'https://example.com'],
+            'status' => ScreenshotStatus::Completed,
+            'from_cache' => true,
+            'completed_at' => now(),
+        ]);
+
+        $this->mock(ScreenshotService::class, function ($mock) use ($screenshot) {
+            $mock->shouldReceive('capture')->andReturn($screenshot);
+        });
+
+        $this->getJson('/api/screenshot?url=https://example.com&response=json')->assertOk();
+        $this->getJson('/api/screenshot?url=https://example.com&response=json')
+            ->assertStatus(429)
+            ->assertJson([
+                'error' => true,
+                'code' => 'RATE_LIMITED',
+            ]);
+    }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\DTOs\ScreenshotParams;
+use App\Enums\ErrorCode;
 use App\Enums\ScreenshotStatus;
 use App\Exceptions\TimeoutException;
 use App\Jobs\ProcessScreenshot;
@@ -61,12 +62,17 @@ class ScreenshotService
         while (now()->lt($deadline)) {
             $screenshot->refresh();
 
-            if ($screenshot->status->isTerminal()) {
+            if ($screenshot->status?->isTerminal()) {
                 return $screenshot;
             }
 
             usleep(200_000);
         }
+
+        $screenshot->markAsFailed(
+            ErrorCode::RenderTimeout->value,
+            'Screenshot timed out while waiting for the worker',
+        );
 
         throw new TimeoutException('Screenshot timed out');
     }
@@ -93,6 +99,8 @@ class ScreenshotService
             'width' => $cached->width,
             'height' => $cached->height,
             'render_time_ms' => $cached->render_time_ms,
+            'extracted_html' => $cached->extracted_html,
+            'extracted_text' => $cached->extracted_text,
             'ip_address' => $ipAddress,
             'from_cache' => true,
             'completed_at' => now(),

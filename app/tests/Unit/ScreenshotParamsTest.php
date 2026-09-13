@@ -421,4 +421,51 @@ class ScreenshotParamsTest extends TestCase
         $this->assertSame(1200.0, $params->clipWidth);
         $this->assertSame(630.0, $params->clipHeight);
     }
+
+    public function test_extract_flags_default_off_and_round_trip(): void
+    {
+        Config::set('screenshot.defaults', [
+            'width' => 1280,
+            'height' => 800,
+            'format' => 'png',
+            'quality' => 80,
+            'full_page' => false,
+        ]);
+        Config::set('screenshot.limits', ['timeout' => 30]);
+
+        $defaults = ScreenshotParams::fromRequest(['url' => 'https://example.com']);
+        $this->assertFalse($defaults->extractHtml);
+        $this->assertFalse($defaults->extractText);
+
+        $params = ScreenshotParams::fromRequest([
+            'url' => 'https://example.com',
+            'extract_html' => true,
+            'extract_text' => true,
+        ]);
+
+        $this->assertTrue($params->extractHtml);
+        $this->assertTrue($params->extractText);
+        $this->assertTrue($params->toArray()['extract_html']);
+        $this->assertTrue($params->toArray()['extract_text']);
+    }
+
+    public function test_extract_flags_change_cache_hash(): void
+    {
+        Config::set('screenshot.defaults', [
+            'width' => 1280,
+            'height' => 800,
+            'format' => 'png',
+            'quality' => 80,
+            'full_page' => false,
+        ]);
+        Config::set('screenshot.limits', ['timeout' => 30]);
+
+        $plain = ScreenshotParams::fromRequest(['url' => 'https://example.com']);
+        $extract = ScreenshotParams::fromRequest([
+            'url' => 'https://example.com',
+            'extract_html' => true,
+        ]);
+
+        $this->assertNotSame($plain->getCacheHash(), $extract->getCacheHash());
+    }
 }

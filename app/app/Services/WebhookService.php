@@ -11,11 +11,11 @@ class WebhookService
 {
     public function send(Screenshot $screenshot): void
     {
-        if (!$screenshot->webhook_url) {
+        if (! $screenshot->webhook_url) {
             return;
         }
 
-        Http::timeout(5)->post($screenshot->webhook_url, [
+        $payload = [
             'id' => $screenshot->id,
             'status' => $screenshot->status->value,
             'file_url' => $screenshot->file_url,
@@ -26,6 +26,24 @@ class WebhookService
             'render_time_ms' => $screenshot->render_time_ms,
             'error_code' => $screenshot->error_code,
             'error_message' => $screenshot->error_message,
-        ]);
+        ];
+
+        $headers = [
+            'X-Captura-Event' => 'screenshot.'.$screenshot->status->value,
+        ];
+
+        $secret = config('screenshot.security.webhook_secret');
+        if (is_string($secret) && $secret !== '') {
+            $headers['X-Captura-Signature'] = 'sha256='.hash_hmac(
+                'sha256',
+                json_encode($payload),
+                $secret,
+            );
+        }
+
+        Http::timeout(5)
+            ->withHeaders($headers)
+            ->post($screenshot->webhook_url, $payload)
+            ->throw();
     }
 }

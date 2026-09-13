@@ -32,7 +32,13 @@ return Application::configure(basePath: dirname(__DIR__))
             ], App\Enums\ErrorCode::ValidationError->httpStatus());
         });
 
-        $exceptions->render(function (Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        // ModelNotFoundException is normalised to NotFoundHttpException by the
+        // handler before render callbacks run, so match the HTTP exception here.
+        $exceptions->render(function (Symfony\Component\HttpKernel\Exception\NotFoundHttpException $e, Illuminate\Http\Request $request) {
+            if (! $request->expectsJson()) {
+                return null;
+            }
+
             return response()->json([
                 'error' => true,
                 'code' => App\Enums\ErrorCode::NotFound->value,

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Jobs;
 
 use App\Models\Screenshot;
-use App\Jobs\SendWebhook;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -25,11 +24,11 @@ class HandleScreenshotResult implements ShouldQueue
     {
         $screenshot = Screenshot::find($this->result['id'] ?? null);
 
-        if (!$screenshot) {
+        if (! $screenshot) {
             return;
         }
 
-        if (!empty($this->result['success'])) {
+        if (! empty($this->result['success'])) {
             $screenshot->markAsCompleted([
                 'file_path' => $this->result['file_path'] ?? null,
                 'file_type' => $this->result['file_type'] ?? null,
@@ -37,6 +36,8 @@ class HandleScreenshotResult implements ShouldQueue
                 'width' => $this->result['width'] ?? null,
                 'height' => $this->result['height'] ?? null,
                 'render_time_ms' => $this->result['render_time_ms'] ?? null,
+                'extracted_html' => $this->result['extracted_html'] ?? null,
+                'extracted_text' => $this->result['extracted_text'] ?? null,
             ]);
         } else {
             $screenshot->markAsFailed(

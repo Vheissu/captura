@@ -59,6 +59,8 @@ export interface ScreenshotParams {
   proxy?: string;
   locale?: string;
   timezone?: string;
+  extract_html?: boolean;
+  extract_text?: boolean;
 }
 
 export interface ScreenshotResult {
@@ -70,6 +72,8 @@ export interface ScreenshotResult {
   width?: number;
   height?: number;
   render_time_ms?: number;
+  extracted_html?: string;
+  extracted_text?: string;
   error_code?: string;
   error_message?: string;
 }

@@ -481,6 +481,14 @@
                             <label for="proxy_pool">Use proxy pool</label>
                         </div>
                         <div class="toggle">
+                            <input id="extract_html" name="extract_html" type="checkbox" value="1">
+                            <label for="extract_html">Extract HTML</label>
+                        </div>
+                        <div class="toggle">
+                            <input id="extract_text" name="extract_text" type="checkbox" value="1">
+                            <label for="extract_text">Extract text</label>
+                        </div>
+                        <div class="toggle">
                             <input id="cache" name="cache" type="checkbox" value="1" checked>
                             <label for="cache">Use cache</label>
                         </div>

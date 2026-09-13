@@ -65,6 +65,8 @@ final readonly class ScreenshotParams
         public ?string $proxyStrategy,
         public ?string $locale,
         public ?string $timezone,
+        public bool $extractHtml,
+        public bool $extractText,
         public ?string $webhookUrl,
         public bool $cache,
     ) {}
@@ -231,6 +233,8 @@ final readonly class ScreenshotParams
             proxyStrategy: $validated['proxy_strategy'] ?? null,
             locale: $locale,
             timezone: $timezone,
+            extractHtml: (bool) ($validated['extract_html'] ?? false),
+            extractText: (bool) ($validated['extract_text'] ?? false),
             webhookUrl: $validated['webhook_url'] ?? null,
             cache: $cache,
         );
@@ -295,6 +299,8 @@ final readonly class ScreenshotParams
             'proxy_strategy' => $this->proxyStrategy,
             'locale' => $this->locale,
             'timezone' => $this->timezone,
+            'extract_html' => $this->extractHtml,
+            'extract_text' => $this->extractText,
             'webhook_url' => $this->webhookUrl,
             'cache' => $this->cache,
         ];
@@ -359,6 +365,8 @@ final readonly class ScreenshotParams
             proxyStrategy: $this->proxyStrategy,
             locale: $this->locale,
             timezone: $this->timezone,
+            extractHtml: $this->extractHtml,
+            extractText: $this->extractText,
             webhookUrl: $this->webhookUrl,
             cache: $this->cache,
         );

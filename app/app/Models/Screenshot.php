@@ -15,6 +15,7 @@ class Screenshot extends Model
     use HasUuids;
 
     public $incrementing = false;
+
     protected $keyType = 'string';
 
     protected $fillable = [
@@ -69,6 +70,8 @@ class Screenshot extends Model
             'width' => $data['width'] ?? null,
             'height' => $data['height'] ?? null,
             'render_time_ms' => $data['render_time_ms'] ?? null,
+            'extracted_html' => $data['extracted_html'] ?? null,
+            'extracted_text' => $data['extracted_text'] ?? null,
             'completed_at' => now(),
         ]);
     }
@@ -85,7 +88,7 @@ class Screenshot extends Model
 
     public function getFileUrlAttribute(): ?string
     {
-        if (!$this->file_path) {
+        if (! $this->file_path) {
             return null;
         }
 
@@ -93,7 +96,7 @@ class Screenshot extends Model
         $url = config('screenshot.storage.public_url');
 
         if ($url) {
-            return rtrim($url, '/') . '/' . ltrim($this->file_path, '/');
+            return rtrim($url, '/').'/'.ltrim($this->file_path, '/');
         }
 
         return Storage::disk($disk)->url($this->file_path);

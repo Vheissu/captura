@@ -140,6 +140,7 @@ return [
 
     'security' => [
         'api_key' => env('SCREENSHOT_API_KEY'),
+        'webhook_secret' => env('SCREENSHOT_WEBHOOK_SECRET'),
         'rate_limit' => (int) env('SCREENSHOT_RATE_LIMIT', 60),
         'allow_localhost' => (bool) env('SCREENSHOT_ALLOW_LOCALHOST', false),
         'allowed_hosts' => array_filter(
@@ -152,5 +153,6 @@ return [
 
     'cleanup' => [
         'after_hours' => (int) env('SCREENSHOT_CLEANUP_AFTER', 24),
+        'stuck_after_minutes' => (int) env('SCREENSHOT_STUCK_AFTER_MINUTES', 60),
     ],
 ];

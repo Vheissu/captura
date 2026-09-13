@@ -159,12 +159,16 @@ test('renderer applies advanced capture controls end to end', async () => {
       proxy: undefined,
       locale: 'en-US',
       timezone: 'UTC',
+      extract_html: true,
+      extract_text: true,
     }, outputPath);
 
     const file = await fs.stat(path.join(tmpDir, outputPath));
     assert.ok(file.size > 0);
     assert.equal(result.width, 800);
     assert.equal(result.height, 600);
+    assert.match(result.extractedHtml, /<section id="hero">/);
+    assert.match(result.extractedText, /Hero/);
 
     const state = await page.evaluate(() => ({
       cookie: document.body.dataset.cookie,
